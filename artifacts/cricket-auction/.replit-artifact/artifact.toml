@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Cricket League Auction Platform"
+version = "1.0.0"
+id = "artifacts/cricket-auction"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18246
+
+[services.development]
+run = "pnpm --filter @workspace/cricket-auction run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cricket-auction", "run", "build" ]
+publicDir = "artifacts/cricket-auction/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18246"
+BASE_PATH = "/"

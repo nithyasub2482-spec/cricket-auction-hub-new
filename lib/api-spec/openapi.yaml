@@ -1,22 +1,34 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
+  # Do not change the title
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: Cricket League Auction & Bidding Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: players
+    description: Player management
+  - name: teams
+    description: Team management
+  - name: auctions
+    description: Auction management
+  - name: bids
+    description: Bid operations
+  - name: analytics
+    description: Analytics and dashboards
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,1183 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/users:
+    get:
+      operationId: listUsers
+      tags: [auth]
+      summary: List all users (admin)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [auth]
+      summary: Create user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # PLAYERS
+  /players:
+    get:
+      operationId: listPlayers
+      tags: [players]
+      summary: List all players
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Player"
+    post:
+      operationId: createPlayer
+      tags: [players]
+      summary: Create player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+
+  /players/{id}:
+    get:
+      operationId: getPlayer
+      tags: [players]
+      summary: Get player by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePlayer
+      tags: [players]
+      summary: Update player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+    delete:
+      operationId: deletePlayer
+      tags: [players]
+      summary: Delete player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # TEAMS
+  /teams:
+    get:
+      operationId: listTeams
+      tags: [teams]
+      summary: List all teams
+      responses:
+        "200":
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+    post:
+      operationId: createTeam
+      tags: [teams]
+      summary: Create team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+
+  /teams/{id}:
+    get:
+      operationId: getTeam
+      tags: [teams]
+      summary: Get team by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+    patch:
+      operationId: updateTeam
+      tags: [teams]
+      summary: Update team
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+
+  /teams/{id}/squad:
+    get:
+      operationId: getTeamSquad
+      tags: [teams]
+      summary: Get team squad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Team squad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamSquad"
+
+  # AUCTIONS
+  /auctions:
+    get:
+      operationId: listAuctions
+      tags: [auctions]
+      summary: List auctions
+      responses:
+        "200":
+          description: List of auctions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Auction"
+    post:
+      operationId: createAuction
+      tags: [auctions]
+      summary: Create auction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuctionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auction"
+
+  /auctions/{id}:
+    get:
+      operationId: getAuction
+      tags: [auctions]
+      summary: Get auction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Auction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auction"
+
+  /auctions/{id}/start:
+    post:
+      operationId: startAuction
+      tags: [auctions]
+      summary: Start auction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auction"
+
+  /auctions/{id}/pause:
+    post:
+      operationId: pauseAuction
+      tags: [auctions]
+      summary: Pause auction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auction"
+
+  /auctions/{id}/resume:
+    post:
+      operationId: resumeAuction
+      tags: [auctions]
+      summary: Resume auction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auction"
+
+  /auctions/{id}/next-player:
+    post:
+      operationId: selectNextPlayer
+      tags: [auctions]
+      summary: Select next player for bidding
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelectPlayerInput"
+      responses:
+        "200":
+          description: Player selected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionSlot"
+
+  /auctions/{id}/sold:
+    post:
+      operationId: markPlayerSold
+      tags: [auctions]
+      summary: Mark current player as sold
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player sold
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionSlot"
+
+  /auctions/{id}/unsold:
+    post:
+      operationId: markPlayerUnsold
+      tags: [auctions]
+      summary: Mark current player as unsold
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player unsold
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionSlot"
+
+  /auctions/{id}/slots:
+    get:
+      operationId: listAuctionSlots
+      tags: [auctions]
+      summary: Get auction slots (history)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Auction slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuctionSlot"
+
+  /auctions/{id}/current-slot:
+    get:
+      operationId: getCurrentSlot
+      tags: [auctions]
+      summary: Get current active slot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Current slot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionSlot"
+        "404":
+          description: No active slot
+
+  # BIDS
+  /auctions/{id}/bids:
+    get:
+      operationId: getAuctionBids
+      tags: [bids]
+      summary: List bids for auction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bid"
+    post:
+      operationId: placeBid
+      tags: [bids]
+      summary: Place a bid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BidInput"
+      responses:
+        "201":
+          description: Bid placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "400":
+          description: Invalid bid
+
+  # ANALYTICS
+  /analytics/league-summary:
+    get:
+      operationId: getLeagueSummary
+      tags: [analytics]
+      summary: Get league-wide auction summary
+      parameters:
+        - name: auctionId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: League summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeagueSummary"
+
+  /analytics/team-stats:
+    get:
+      operationId: getTeamStats
+      tags: [analytics]
+      summary: Get stats for all teams
+      parameters:
+        - name: auctionId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Team stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamStats"
+
+  /analytics/bid-activity:
+    get:
+      operationId: getBidActivity
+      tags: [analytics]
+      summary: Get recent bid activity timeline
+      parameters:
+        - name: auctionId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bid activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BidActivity"
+
+  /analytics/player-pool:
+    get:
+      operationId: getPlayerPool
+      tags: [analytics]
+      summary: Get remaining player pool breakdown
+      parameters:
+        - name: auctionId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player pool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerPool"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # AUTH
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, email, name, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, commissioner, auctioneer, team_owner, viewer, analyst]
+        teamId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, commissioner, auctioneer, team_owner, viewer, analyst]
+        password:
+          type: string
+        teamId:
+          type: ["integer", "null"]
+
+    # PLAYERS
+    Player:
+      type: object
+      required: [id, name, country, category, basePrice, battingStyle, bowlingStyle, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        country:
+          type: string
+        city:
+          type: ["string", "null"]
+        age:
+          type: ["integer", "null"]
+        category:
+          type: string
+          enum: [batsman, bowler, all_rounder, wicket_keeper]
+        battingStyle:
+          type: string
+        bowlingStyle:
+          type: string
+        basePrice:
+          type: number
+        status:
+          type: string
+          enum: [available, sold, unsold, in_auction]
+        photoUrl:
+          type: ["string", "null"]
+        matches:
+          type: ["integer", "null"]
+        runs:
+          type: ["integer", "null"]
+        wickets:
+          type: ["integer", "null"]
+        strikeRate:
+          type: ["number", "null"]
+        economy:
+          type: ["number", "null"]
+        average:
+          type: ["number", "null"]
+        fifties:
+          type: ["integer", "null"]
+        hundreds:
+          type: ["integer", "null"]
+        rating:
+          type: ["number", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    PlayerInput:
+      type: object
+      required: [name, country, category, basePrice, battingStyle, bowlingStyle]
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+        age:
+          type: integer
+        category:
+          type: string
+          enum: [batsman, bowler, all_rounder, wicket_keeper]
+        battingStyle:
+          type: string
+        bowlingStyle:
+          type: string
+        basePrice:
+          type: number
+        photoUrl:
+          type: string
+        matches:
+          type: integer
+        runs:
+          type: integer
+        wickets:
+          type: integer
+        strikeRate:
+          type: number
+        economy:
+          type: number
+        average:
+          type: number
+        fifties:
+          type: integer
+        hundreds:
+          type: integer
+        rating:
+          type: number
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    PlayerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+        age:
+          type: integer
+        category:
+          type: string
+          enum: [batsman, bowler, all_rounder, wicket_keeper]
+        battingStyle:
+          type: string
+        bowlingStyle:
+          type: string
+        basePrice:
+          type: number
+        photoUrl:
+          type: string
+        matches:
+          type: integer
+        runs:
+          type: integer
+        wickets:
+          type: integer
+        strikeRate:
+          type: number
+        economy:
+          type: number
+        average:
+          type: number
+        fifties:
+          type: integer
+        hundreds:
+          type: integer
+        rating:
+          type: number
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [available, sold, unsold, in_auction]
+
+    # TEAMS
+    Team:
+      type: object
+      required: [id, name, shortName, primaryColor, purse, remainingPurse, maxPlayers, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        shortName:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        purse:
+          type: number
+        remainingPurse:
+          type: number
+        maxPlayers:
+          type: integer
+        maxOverseas:
+          type: integer
+        ownerId:
+          type: ["integer", "null"]
+        ownerName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TeamInput:
+      type: object
+      required: [name, shortName, primaryColor, purse, maxPlayers]
+      properties:
+        name:
+          type: string
+        shortName:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        logoUrl:
+          type: string
+        purse:
+          type: number
+        maxPlayers:
+          type: integer
+        maxOverseas:
+          type: integer
+        ownerId:
+          type: integer
+        ownerName:
+          type: string
+
+    TeamUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        shortName:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        logoUrl:
+          type: string
+        purse:
+          type: number
+        remainingPurse:
+          type: number
+        maxPlayers:
+          type: integer
+        maxOverseas:
+          type: integer
+        ownerId:
+          type: integer
+        ownerName:
+          type: string
+
+    TeamSquad:
+      type: object
+      required: [team, players, stats]
+      properties:
+        team:
+          $ref: "#/components/schemas/Team"
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/SquadPlayer"
+        stats:
+          $ref: "#/components/schemas/SquadStats"
+
+    SquadPlayer:
+      type: object
+      required: [id, name, category, country, soldPrice, battingStyle, bowlingStyle]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        country:
+          type: string
+        soldPrice:
+          type: number
+        battingStyle:
+          type: string
+        bowlingStyle:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        rating:
+          type: ["number", "null"]
+
+    SquadStats:
+      type: object
+      required: [totalPlayers, batsmen, bowlers, allRounders, wicketKeepers, overseas, spent, remaining, avgPrice]
+      properties:
+        totalPlayers:
+          type: integer
+        batsmen:
+          type: integer
+        bowlers:
+          type: integer
+        allRounders:
+          type: integer
+        wicketKeepers:
+          type: integer
+        overseas:
+          type: integer
+        spent:
+          type: number
+        remaining:
+          type: number
+        avgPrice:
+          type: number
+
+    # AUCTIONS
+    Auction:
+      type: object
+      required: [id, name, leagueName, status, bidIncrementMin, timerSeconds, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        leagueName:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, paused, completed]
+        currentPlayerId:
+          type: ["integer", "null"]
+        currentSlotId:
+          type: ["integer", "null"]
+        bidIncrementMin:
+          type: number
+        timerSeconds:
+          type: integer
+        startedAt:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AuctionInput:
+      type: object
+      required: [name, leagueName, bidIncrementMin, timerSeconds]
+      properties:
+        name:
+          type: string
+        leagueName:
+          type: string
+        bidIncrementMin:
+          type: number
+        timerSeconds:
+          type: integer
+
+    AuctionSlot:
+      type: object
+      required: [id, auctionId, playerId, status, basePrice, createdAt]
+      properties:
+        id:
+          type: integer
+        auctionId:
+          type: integer
+        playerId:
+          type: integer
+        player:
+          $ref: "#/components/schemas/Player"
+        status:
+          type: string
+          enum: [active, sold, unsold]
+        basePrice:
+          type: number
+        currentBid:
+          type: ["number", "null"]
+        soldPrice:
+          type: ["number", "null"]
+        soldToTeamId:
+          type: ["integer", "null"]
+        soldToTeam:
+          $ref: "#/components/schemas/Team"
+        highestBidTeamId:
+          type: ["integer", "null"]
+        highestBidTeam:
+          $ref: "#/components/schemas/Team"
+        bidCount:
+          type: integer
+        createdAt:
+          type: string
+
+    SelectPlayerInput:
+      type: object
+      required: [playerId]
+      properties:
+        playerId:
+          type: integer
+
+    # BIDS
+    Bid:
+      type: object
+      required: [id, auctionId, slotId, teamId, amount, createdAt]
+      properties:
+        id:
+          type: integer
+        auctionId:
+          type: integer
+        slotId:
+          type: integer
+        teamId:
+          type: integer
+        team:
+          $ref: "#/components/schemas/Team"
+        amount:
+          type: number
+        createdAt:
+          type: string
+
+    BidInput:
+      type: object
+      required: [slotId, teamId, amount]
+      properties:
+        slotId:
+          type: integer
+        teamId:
+          type: integer
+        amount:
+          type: number
+
+    # ANALYTICS
+    LeagueSummary:
+      type: object
+      required: [totalPlayers, soldPlayers, unsoldPlayers, remainingPlayers, totalBids, highestBid, mostExpensivePlayer, highestSpendingTeam, avgSoldPrice, totalSpent]
+      properties:
+        totalPlayers:
+          type: integer
+        soldPlayers:
+          type: integer
+        unsoldPlayers:
+          type: integer
+        remainingPlayers:
+          type: integer
+        totalBids:
+          type: integer
+        highestBid:
+          type: number
+        mostExpensivePlayer:
+          $ref: "#/components/schemas/Player"
+        highestSpendingTeam:
+          $ref: "#/components/schemas/Team"
+        avgSoldPrice:
+          type: number
+        totalSpent:
+          type: number
+
+    TeamStats:
+      type: object
+      required: [team, playerCount, spent, remainingPurse, batsmen, bowlers, allRounders, wicketKeepers, overseas, budgetEfficiency]
+      properties:
+        team:
+          $ref: "#/components/schemas/Team"
+        playerCount:
+          type: integer
+        spent:
+          type: number
+        remainingPurse:
+          type: number
+        batsmen:
+          type: integer
+        bowlers:
+          type: integer
+        allRounders:
+          type: integer
+        wicketKeepers:
+          type: integer
+        overseas:
+          type: integer
+        budgetEfficiency:
+          type: number
+
+    BidActivity:
+      type: object
+      required: [id, playerName, teamName, teamColor, amount, createdAt]
+      properties:
+        id:
+          type: integer
+        playerName:
+          type: string
+        teamName:
+          type: string
+        teamColor:
+          type: string
+        amount:
+          type: number
+        createdAt:
+          type: string
+
+    PlayerPool:
+      type: object
+      required: [total, available, sold, unsold, byCategory]
+      properties:
+        total:
+          type: integer
+        available:
+          type: integer
+        sold:
+          type: integer
+        unsold:
+          type: integer
+        byCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+
+    CategoryCount:
+      type: object
+      required: [category, total, available, sold]
+      properties:
+        category:
+          type: string
+        total:
+          type: integer
+        available:
+          type: integer
+        sold:
+          type: integer

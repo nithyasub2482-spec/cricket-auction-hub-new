@@ -1,0 +1,113 @@
+import { useParams } from "wouter";
+import { useGetAuction, getGetAuctionQueryKey, useGetCurrentSlot, getGetCurrentSlotQueryKey } from "@workspace/api-client-react";
+import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { Loader2 } from "lucide-react";
+import { formatMoney } from "@/lib/utils";
+
+export default function AuctionDisplay() {
+  const { id } = useParams();
+  const auctionId = parseInt(id || "0", 10);
+  
+  // Real-time socket connection
+  useAuctionSocket(auctionId);
+  
+  const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
+    query: { enabled: !!auctionId, queryKey: getGetAuctionQueryKey(auctionId) }
+  });
+  
+  const { data: slot } = useGetCurrentSlot(auctionId, {
+    query: { enabled: !!auctionId && auction?.status === "active", queryKey: getGetCurrentSlotQueryKey(auctionId) }
+  });
+
+  if (auctionLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-24 h-24 animate-spin text-white opacity-20" />
+      </div>
+    );
+  }
+
+  if (!auction) return null;
+
+  return (
+    <div className="min-h-screen bg-black text-white overflow-hidden flex flex-col font-sans select-none">
+      
+      {/* Header */}
+      <header className="h-24 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-12">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+            <span className="font-black text-3xl text-black">A</span>
+          </div>
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-widest text-white">{auction.name}</h1>
+            <p className="text-zinc-400 font-mono text-xl tracking-widest uppercase">{auction.leagueName}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className={`w-4 h-4 rounded-full ${auction.status === 'active' ? 'bg-red-600 animate-pulse' : 'bg-zinc-600'}`} />
+          <span className="text-2xl font-black uppercase tracking-widest text-zinc-400">
+            {auction.status === 'active' ? 'LIVE' : auction.status}
+          </span>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 relative flex items-center justify-center p-12">
+        
+        {!slot || !slot.player ? (
+          <div className="text-center opacity-30">
+            <h2 className="text-6xl font-black uppercase tracking-[0.2em] mb-4">Awaiting Player</h2>
+            <p className="font-mono text-2xl">Stand by for next lot</p>
+          </div>
+        ) : (
+          <div className="w-full max-w-7xl flex gap-16 items-center justify-center">
+            
+            {/* Player Info */}
+            <div className="flex-1 text-right border-r border-zinc-800 pr-16 py-12">
+              <div className="text-primary font-mono text-2xl uppercase tracking-widest mb-4">
+                {slot.player.category.replace('_', ' ')} • {slot.player.country}
+              </div>
+              <h2 className="text-[6rem] leading-none font-black uppercase tracking-tighter mb-8 text-white">
+                {slot.player.name}
+              </h2>
+              <div className="inline-block bg-zinc-900 px-8 py-4 rounded-xl border border-zinc-800">
+                <div className="text-zinc-500 font-bold uppercase tracking-widest mb-1">Base Price</div>
+                <div className="text-4xl font-mono font-bold text-white">{formatMoney(slot.player.basePrice)}</div>
+              </div>
+            </div>
+
+            {/* Current Bid */}
+            <div className="flex-1 pl-8">
+              <div className="text-zinc-500 font-black uppercase tracking-[0.3em] text-2xl mb-4">Current Bid</div>
+              <div className="text-[8rem] leading-none font-black font-mono tracking-tighter text-primary mb-8 drop-shadow-[0_0_30px_rgba(255,165,0,0.3)]">
+                {formatMoney(slot.currentBid || slot.basePrice)}
+              </div>
+              
+              {slot.highestBidTeam ? (
+                <div className="inline-flex items-center gap-6 px-10 py-6 bg-zinc-900 rounded-2xl border border-zinc-700">
+                  <div 
+                    className="w-12 h-12 rounded-full" 
+                    style={{ backgroundColor: slot.highestBidTeam.primaryColor }}
+                  />
+                  <span className="font-black text-5xl uppercase tracking-wider text-white">
+                    {slot.highestBidTeam.name}
+                  </span>
+                </div>
+              ) : (
+                <div className="inline-block px-10 py-6 bg-zinc-900/50 rounded-2xl border border-zinc-800 border-dashed">
+                  <span className="font-black text-3xl uppercase tracking-widest text-zinc-600">
+                    Awaiting First Bid
+                  </span>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+    </div>
+  );
+}
