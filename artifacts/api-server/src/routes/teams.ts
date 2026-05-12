@@ -44,7 +44,11 @@ router.post("/teams", requireAuth, async (req, res): Promise<void> => {
 
   const [team] = await db
     .insert(teamsTable)
-    .values({ ...parsed.data, remainingPurse: parsed.data.purse })
+    .values({
+      ...parsed.data,
+      purse: String(parsed.data.purse),
+      remainingPurse: String(parsed.data.purse),
+    })
     .returning();
 
   res.status(201).json(formatTeam(team!));
@@ -78,9 +82,14 @@ router.patch("/teams/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const { purse, remainingPurse, ...rest } = parsed.data;
   const [team] = await db
     .update(teamsTable)
-    .set(parsed.data)
+    .set({
+      ...rest,
+      ...(purse !== undefined ? { purse: String(purse) } : {}),
+      ...(remainingPurse !== undefined ? { remainingPurse: String(remainingPurse) } : {}),
+    })
     .where(eq(teamsTable.id, params.data.id))
     .returning();
 

@@ -2,10 +2,11 @@ import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
 import { useGetAuction, getGetAuctionQueryKey, useGetCurrentSlot, getGetCurrentSlotQueryKey, useGetAuctionBids, getGetAuctionBidsQueryKey, usePlaceBid } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Gavel, User as UserIcon, Trophy, History } from "lucide-react";
+import { Loader2, Gavel, User as UserIcon, Trophy, History, AlertTriangle } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +16,7 @@ export default function LiveAuction() {
   const auctionId = parseInt(id || "0", 10);
   const { user } = useAuth();
   
-  const { connected } = useAuctionSocket(auctionId);
+  const { connected, timerState } = useAuctionSocket(auctionId);
   
   const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
     query: { enabled: !!auctionId, queryKey: getGetAuctionQueryKey(auctionId) }
@@ -45,6 +46,7 @@ export default function LiveAuction() {
   };
 
   const isBiddingActive = auction?.status === "active" && slot?.status === "active";
+  const timerExpired = timerState?.expired ?? false;
   const player = slot?.player;
 
   if (auctionLoading) {
@@ -80,10 +82,30 @@ export default function LiveAuction() {
                 {connected ? "LIVE" : "OFFLINE"}
               </div>
             </div>
-            <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
-              {auction.status}
-            </Badge>
+            <div className="flex items-center gap-4">
+              {timerState && slot?.status === "active" && (
+                <CountdownTimer timer={timerState} size="md" />
+              )}
+              <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
+                {auction.status}
+              </Badge>
+            </div>
           </div>
+
+          {/* Timer expired banner for team owners */}
+          <AnimatePresence>
+            {timerExpired && slot?.status === "active" && user?.role === "team_owner" && (
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="flex items-center gap-3 px-5 py-3 rounded border border-destructive/50 bg-destructive/10 text-destructive font-bold uppercase tracking-wider"
+              >
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                Bidding time has ended — awaiting auctioneer decision
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <Card className="flex-1 flex flex-col overflow-hidden border-2 border-border relative bg-card">
             {slotLoading ? (
@@ -170,10 +192,12 @@ export default function LiveAuction() {
                       size="lg" 
                       className="w-full text-xl h-20 font-black uppercase tracking-widest gap-4 group"
                       onClick={handleBid}
-                      disabled={!isBiddingActive || placeBidMutation.isPending || slot.highestBidTeamId === user.teamId}
+                      disabled={!isBiddingActive || timerExpired || placeBidMutation.isPending || slot.highestBidTeamId === user.teamId}
                     >
                       <Gavel className="w-8 h-8 group-hover:rotate-12 transition-transform" />
-                      {slot.highestBidTeamId === user.teamId
+                      {timerExpired
+                        ? "Bidding Closed"
+                        : slot.highestBidTeamId === user.teamId
                         ? "You are highest bidder"
                         : `Place Bid (${formatMoney((slot.currentBid ?? slot.basePrice) + auction.bidIncrementMin)})`}
                     </Button>

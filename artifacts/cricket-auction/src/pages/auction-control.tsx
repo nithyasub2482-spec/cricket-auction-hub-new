@@ -7,19 +7,21 @@ import {
   useMarkPlayerSold, useMarkPlayerUnsold, useListPlayers
 } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Play, Pause, Gavel, XCircle, Search } from "lucide-react";
+import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AuctionControl() {
   const { id } = useParams();
   const auctionId = parseInt(id || "0", 10);
   
-  useAuctionSocket(auctionId);
+  const { timerState } = useAuctionSocket(auctionId);
   
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -40,6 +42,9 @@ export default function AuctionControl() {
   const markSoldMutation = useMarkPlayerSold();
   const markUnsoldMutation = useMarkPlayerUnsold();
 
+  const timerExpired = timerState?.expired ?? false;
+  const hasActiveBid = !!slot?.highestBidTeamId;
+
   if (auctionLoading) {
     return (
       <Layout>
@@ -58,14 +63,19 @@ export default function AuctionControl() {
         
         <div className="lg:col-span-2 flex flex-col gap-6">
           <Card className="p-6 border-2 border-border bg-card">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">Control Console</h1>
                 <p className="text-muted-foreground">{auction.name}</p>
               </div>
-              <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
-                {auction.status}
-              </Badge>
+              <div className="flex items-center gap-4">
+                {timerState && slot?.status === "active" && (
+                  <CountdownTimer timer={timerState} size="md" />
+                )}
+                <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
+                  {auction.status}
+                </Badge>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-4 p-4 bg-secondary rounded-lg border border-border">
@@ -105,9 +115,32 @@ export default function AuctionControl() {
             </div>
             
             {slot?.player && (
-              <div className="mt-8">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Current Slot Actions</h3>
-                <div className="p-6 border-2 border-primary/30 rounded-lg bg-primary/5">
+              <div className="mt-6">
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Current Slot</h3>
+
+                {/* Timer expired — action required banner */}
+                <AnimatePresence>
+                  {timerExpired && slot.status === "active" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      className="mb-4 flex items-center gap-3 px-5 py-4 rounded-lg border-2 border-destructive bg-destructive/10 text-destructive"
+                    >
+                      <Bell className="w-6 h-6 shrink-0 animate-bounce" />
+                      <div>
+                        <div className="font-black uppercase tracking-wider text-lg">Bidding Time Expired</div>
+                        <div className="font-medium text-sm opacity-80">
+                          {hasActiveBid
+                            ? `Sold to ${slot.highestBidTeam?.name} for ${formatMoney(slot.currentBid ?? 0)} — confirm below`
+                            : "No bids placed — mark player unsold"}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className={`p-6 border-2 rounded-lg transition-colors ${timerExpired ? "border-destructive/60 bg-destructive/5" : "border-primary/30 bg-primary/5"}`}>
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <div className="text-2xl font-bold uppercase text-foreground">{slot.player.name}</div>
@@ -123,20 +156,22 @@ export default function AuctionControl() {
                   <div className="grid grid-cols-2 gap-4">
                     <Button 
                       size="lg" 
-                      className="bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wider"
+                      className={`font-bold uppercase tracking-wider text-white ${timerExpired && hasActiveBid ? "bg-green-500 hover:bg-green-400 ring-2 ring-green-400 ring-offset-2 ring-offset-background animate-pulse" : "bg-green-600 hover:bg-green-500"}`}
                       disabled={!slot.highestBidTeamId || markSoldMutation.isPending}
                       onClick={() => markSoldMutation.mutate({ id: slot.id })}
                     >
-                      <Gavel className="w-5 h-5 mr-2" /> Mark Sold
+                      <Gavel className="w-5 h-5 mr-2" /> 
+                      {timerExpired && hasActiveBid ? "CONFIRM SOLD" : "Mark Sold"}
                     </Button>
                     <Button 
                       size="lg" 
                       variant="destructive"
-                      className="font-bold uppercase tracking-wider"
+                      className={`font-bold uppercase tracking-wider ${timerExpired && !hasActiveBid ? "ring-2 ring-destructive ring-offset-2 ring-offset-background animate-pulse" : ""}`}
                       disabled={markUnsoldMutation.isPending}
                       onClick={() => markUnsoldMutation.mutate({ id: slot.id })}
                     >
-                      <XCircle className="w-5 h-5 mr-2" /> Mark Unsold
+                      <XCircle className="w-5 h-5 mr-2" /> 
+                      {timerExpired && !hasActiveBid ? "MARK UNSOLD" : "Mark Unsold"}
                     </Button>
                   </div>
                 </div>

@@ -18,7 +18,7 @@ import {
   PlaceBidBody,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
-import { emitToAuction } from "../lib/socket";
+import { emitToAuction, startTimer, resetTimer, stopTimer, pauseTimer, resumeTimer } from "../lib/socket";
 
 const router: IRouter = Router();
 
@@ -129,7 +129,11 @@ router.post("/auctions", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [auction] = await db.insert(auctionsTable).values(parsed.data).returning();
+  const { bidIncrementMin, ...auctionRest } = parsed.data;
+  const [auction] = await db.insert(auctionsTable).values({
+    ...auctionRest,
+    bidIncrementMin: String(bidIncrementMin),
+  }).returning();
   res.status(201).json(formatAuction(auction!));
 });
 
@@ -189,6 +193,7 @@ router.post("/auctions/:id/pause", requireAuth, async (req, res): Promise<void> 
     return;
   }
   const formatted = formatAuction(auction);
+  pauseTimer(auction.id);
   emitToAuction(auction.id, "auction:paused", formatted);
   res.json(formatted);
 });
@@ -210,6 +215,7 @@ router.post("/auctions/:id/resume", requireAuth, async (req, res): Promise<void>
     return;
   }
   const formatted = formatAuction(auction);
+  resumeTimer(auction.id);
   emitToAuction(auction.id, "auction:resumed", formatted);
   res.json(formatted);
 });
@@ -260,11 +266,21 @@ router.post("/auctions/:id/next-player", requireAuth, async (req, res): Promise<
     .set({ currentPlayerId: player.id, currentSlotId: slot!.id })
     .where(eq(auctionsTable.id, params.data.id));
 
+  // Fetch auction to get configured timer duration
+  const [auctionForTimer] = await db
+    .select()
+    .from(auctionsTable)
+    .where(eq(auctionsTable.id, params.data.id));
+
   const formattedSlot = await formatSlot(slot!);
   emitToAuction(params.data.id, "player:selected", {
     slot: formattedSlot,
     player: formatPlayer(player),
   });
+
+  // Start the countdown timer
+  startTimer(params.data.id, auctionForTimer?.timerSeconds ?? 60);
+
   res.json(formattedSlot);
 });
 
@@ -334,6 +350,8 @@ router.post("/auctions/:id/sold", requireAuth, async (req, res): Promise<void> =
     .set({ currentPlayerId: null, currentSlotId: null })
     .where(eq(auctionsTable.id, params.data.id));
 
+  stopTimer(params.data.id);
+
   const formattedSlot = await formatSlot(updatedSlot!);
   emitToAuction(params.data.id, "player:sold", {
     slot: formattedSlot,
@@ -378,6 +396,8 @@ router.post("/auctions/:id/unsold", requireAuth, async (req, res): Promise<void>
     .update(auctionsTable)
     .set({ currentPlayerId: null, currentSlotId: null })
     .where(eq(auctionsTable.id, params.data.id));
+
+  stopTimer(params.data.id);
 
   const formattedSlot = await formatSlot(updatedSlot!);
   emitToAuction(params.data.id, "player:unsold", {
@@ -574,6 +594,10 @@ router.post("/auctions/:id/bids", requireAuth, async (req, res): Promise<void> =
 
   const updatedSlot = await formatSlot({ ...slot, currentBid: String(body.data.amount), highestBidTeamId: body.data.teamId, bidCount: slot.bidCount + 1 });
   emitToAuction(params.data.id, "bid:placed", { bid: bidResult, slot: updatedSlot });
+
+  // Reset countdown on every new bid
+  resetTimer(params.data.id);
+
   res.status(201).json(bidResult);
 });
 

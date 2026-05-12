@@ -70,7 +70,15 @@ router.post("/players", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const [player] = await db.insert(playersTable).values(parsed.data).returning();
+  const { basePrice, strikeRate, economy, average, rating, ...rest } = parsed.data;
+  const [player] = await db.insert(playersTable).values({
+    ...rest,
+    basePrice: String(basePrice),
+    ...(strikeRate !== undefined ? { strikeRate: String(strikeRate) } : {}),
+    ...(economy !== undefined ? { economy: String(economy) } : {}),
+    ...(average !== undefined ? { average: String(average) } : {}),
+    ...(rating !== undefined ? { rating: String(rating) } : {}),
+  }).returning();
   res.status(201).json(formatPlayer(player!));
 });
 
@@ -106,9 +114,17 @@ router.patch("/players/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const { basePrice: bp, strikeRate: sr, economy: ec, average: av, rating: rt, ...updateRest } = parsed.data;
   const [player] = await db
     .update(playersTable)
-    .set(parsed.data)
+    .set({
+      ...updateRest,
+      ...(bp !== undefined ? { basePrice: String(bp) } : {}),
+      ...(sr !== undefined ? { strikeRate: String(sr) } : {}),
+      ...(ec !== undefined ? { economy: String(ec) } : {}),
+      ...(av !== undefined ? { average: String(av) } : {}),
+      ...(rt !== undefined ? { rating: String(rt) } : {}),
+    })
     .where(eq(playersTable.id, params.data.id))
     .returning();
 
