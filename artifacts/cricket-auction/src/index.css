@@ -33,7 +33,9 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    @apply font-sans antialiased;
     background-image: 
       radial-gradient(at 0% 0%, hsla(199, 89%, 48%, 0.05) 0px, transparent 50%),
       radial-gradient(at 100% 0%, hsla(263, 70%, 50%, 0.05) 0px, transparent 50%);
@@ -45,7 +47,8 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-card/60 backdrop-blur-md border border-white/5 shadow-2xl;
+    background-color: hsl(var(--card) / 0.6);
+    @apply backdrop-blur-md border border-white/5 shadow-2xl;
   }
   
   .stadium-border {
@@ -54,15 +57,16 @@
   
   .stadium-border::before {
     content: '';
-    @apply absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent;
+    @apply absolute top-0 left-0 w-full h-px;
+    background: linear-gradient(to right, transparent, hsl(var(--primary) / 0.5), transparent);
   }
 
   .neon-glow {
-    box-shadow: 0 0 15px hsla(var(--primary), 0.3);
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.3);
   }
 
   .tournament-gradient {
-    background: linear-gradient(135deg, hsla(var(--primary), 0.2) 0%, transparent 100%);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.2) 0%, transparent 100%);
   }
 }
 
