@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
-import { useGetAuction, useGetCurrentSlot, useListAuctionBids, getGetAuctionQueryKey, getGetCurrentSlotQueryKey, getGetAuctionBidsQueryKey } from "@workspace/api-client-react";
+import { useGetAuction, useGetCurrentSlot, useGetAuctionBids, getGetAuctionQueryKey, getGetCurrentSlotQueryKey, getGetAuctionBidsQueryKey } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
 import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
@@ -25,7 +25,7 @@ export default function LiveAuction() {
     query: { enabled: !!auctionId, queryKey: getGetCurrentSlotQueryKey(auctionId) }
   });
 
-  const { data: bids } = useListAuctionBids(auctionId, {
+  const { data: bids } = useGetAuctionBids(auctionId, {
     query: { enabled: !!auctionId, queryKey: getGetAuctionBidsQueryKey(auctionId) }
   });
 
