@@ -12,7 +12,7 @@ import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell, Shield, UserPlus, Info } from "lucide-react";
+import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell, Shield, UserPlus, Info, Star } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";

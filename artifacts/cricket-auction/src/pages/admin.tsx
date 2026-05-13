@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { Plus, Trophy, Users, ShieldCheck, Gavel, LayoutGrid, UserPlus, Shield, ChevronRight } from "lucide-react";
+import { Plus, Trophy, Users, ShieldCheck, Gavel, UserPlus, Shield, ChevronRight } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { clsx } from "clsx";
 import { useToast } from "@/hooks/use-toast";
