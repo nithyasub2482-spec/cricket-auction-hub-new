@@ -34,7 +34,7 @@ export default function AuctionDisplay() {
   const timerExpired = timerState?.expired ?? false;
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-black text-white overflow-hidden flex flex-col select-none">
       
       {/* Header */}
       <header className="h-24 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-12">

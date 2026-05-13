@@ -80,19 +80,19 @@ export default function Admin() {
            </div>
            
            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar max-w-full">
-              {TABS.map((t) => (
+              {TABS.map((tabItem) => (
                 <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
+                  key={tabItem.id}
+                  onClick={() => setTab(tabItem.id)}
                   className={cn(
                     "flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
-                    tab === t.id
+                    tab === tabItem.id
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                   )}
                 >
-                  <t.icon className="w-3.5 h-3.5" />
-                  {t.label}
+                  <tabItem.icon className="w-3.5 h-3.5" />
+                  {tabItem.label}
                 </button>
               ))}
            </div>
@@ -129,20 +129,20 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Auction Title</Label>
-                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.name} onChange={(e) => setAuctionForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. IPL 2024 Mega Auction" required />
+                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.name} onChange={(ev) => setAuctionForm((prev) => ({ ...prev, name: ev.target.value }))} placeholder="e.g. IPL 2024 Mega Auction" required />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">League/Division</Label>
-                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.leagueName} onChange={(e) => setAuctionForm((prev) => ({ ...prev, leagueName: e.target.value }))} placeholder="e.g. Indian Premier League" required />
+                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.leagueName} onChange={(ev) => setAuctionForm((prev) => ({ ...prev, leagueName: ev.target.value }))} placeholder="e.g. Indian Premier League" required />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Timer (s)</Label>
-                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10} value={auctionForm.timerSeconds} onChange={(e) => setAuctionForm((prev) => ({ ...prev, timerSeconds: parseInt(e.target.value) }))} />
+                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10} value={auctionForm.timerSeconds} onChange={(ev) => setAuctionForm((prev) => ({ ...prev, timerSeconds: parseInt(ev.target.value) }))} />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Min Bid (₹)</Label>
-                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10000} value={auctionForm.bidIncrementMin} onChange={(e) => setAuctionForm((prev) => ({ ...prev, bidIncrementMin: parseInt(e.target.value) }))} />
+                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10000} value={auctionForm.bidIncrementMin} onChange={(ev) => setAuctionForm((prev) => ({ ...prev, bidIncrementMin: parseInt(ev.target.value) }))} />
                           </div>
                         </div>
                         <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={createAuction.isPending}>
@@ -152,27 +152,27 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="lg:col-span-8 space-y-4">
-                    {auctions?.map((auction) => (
-                      <div key={auction.id} className="group p-6 glass-panel rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all">
+                    {auctions?.map((auctionItem) => (
+                      <div key={auctionItem.id} className="group p-6 glass-panel rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all">
                         <div className="flex items-center gap-6">
                            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-primary/40 group-hover:text-primary transition-colors">
                               <Gavel className="w-6 h-6" />
                            </div>
                            <div>
-                              <div className="font-display font-black text-xl uppercase tracking-tight text-white">{auction.name}</div>
-                              <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{auction.leagueName}</div>
+                              <div className="font-display font-black text-xl uppercase tracking-tight text-white">{auctionItem.name}</div>
+                              <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{auctionItem.leagueName}</div>
                            </div>
                         </div>
                         <div className="flex items-center gap-6">
                            <div className="hidden md:block text-right">
                               <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuration</div>
-                              <div className="text-xs font-bold text-white/60">{auction.timerSeconds}s · ₹{(auction.bidIncrementMin/1000).toFixed(0)}k Incr</div>
+                              <div className="text-xs font-bold text-white/60">{auctionItem.timerSeconds}s · ₹{(auctionItem.bidIncrementMin/1000).toFixed(0)}k Incr</div>
                            </div>
                            <Badge className={cn(
                              "uppercase font-black tracking-widest px-4 py-2 rounded-full text-[10px]",
-                             auction.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
+                             auctionItem.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
                            )}>
-                             {auction.status}
+                             {auctionItem.status}
                            </Badge>
                         </div>
                       </div>
@@ -211,18 +211,18 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Full Name</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.name} onChange={(e) => setPlayerForm((prev) => ({ ...prev, name: e.target.value }))} required />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.name} onChange={(ev) => setPlayerForm((prev) => ({ ...prev, name: ev.target.value }))} required />
                         </div>
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Nationality</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.country} onChange={(e) => setPlayerForm((prev) => ({ ...prev, country: e.target.value }))} />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.country} onChange={(ev) => setPlayerForm((prev) => ({ ...prev, country: ev.target.value }))} />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Role/Category</Label>
                           <select
                             className="w-full h-12 px-4 rounded-xl border border-white/5 bg-white/5 text-white text-sm font-bold appearance-none outline-none focus:border-primary"
                             value={playerForm.category}
-                            onChange={(e) => setPlayerForm((prev) => ({ ...prev, category: e.target.value }))}
+                            onChange={(ev) => setPlayerForm((prev) => ({ ...prev, category: ev.target.value }))}
                           >
                             <option value="batsman">Batsman</option>
                             <option value="bowler">Bowler</option>
@@ -233,7 +233,7 @@ export default function Admin() {
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Base Price (₹)</Label>
-                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={playerForm.basePrice} onChange={(e) => setPlayerForm((prev) => ({ ...prev, basePrice: parseInt(e.target.value) }))} />
+                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={playerForm.basePrice} onChange={(ev) => setPlayerForm((prev) => ({ ...prev, basePrice: parseInt(ev.target.value) }))} />
                            </div>
                            <div className="flex items-end">
                               <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest" disabled={createPlayer.isPending}>
@@ -250,21 +250,21 @@ export default function Admin() {
                        <span>Valuation & Status</span>
                     </div>
                     <div className="space-y-3 max-h-[600px] overflow-auto pr-2 no-scrollbar">
-                      {players?.map((player) => (
-                        <div key={player.id} className="p-4 glass-panel rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all">
+                      {players?.map((playerItem) => (
+                        <div key={playerItem.id} className="p-4 glass-panel rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black uppercase text-[10px]">
-                               {player.name.charAt(0)}
+                               {playerItem.name.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-bold text-sm uppercase text-white">{player.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{player.country} · {player.category}</div>
+                              <div className="font-bold text-sm uppercase text-white">{playerItem.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{playerItem.country} · {playerItem.category}</div>
                             </div>
                           </div>
                           <div className="text-right flex items-center gap-6">
                             <div>
-                              <div className="font-display font-black text-primary text-sm">{formatMoney(player.basePrice)}</div>
-                              <Badge variant="outline" className="text-[9px] uppercase border-white/10 font-black tracking-widest text-muted-foreground">{player.status}</Badge>
+                              <div className="font-display font-black text-primary text-sm">{formatMoney(playerItem.basePrice)}</div>
+                              <Badge variant="outline" className="text-[9px] uppercase border-white/10 font-black tracking-widest text-muted-foreground">{playerItem.status}</Badge>
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground opacity-20" />
                           </div>
@@ -298,44 +298,44 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Franchise Name</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={teamForm.name} onChange={(e) => setTeamForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. Mumbai Indians" required />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={teamForm.name} onChange={(ev) => setTeamForm((prev) => ({ ...prev, name: ev.target.value }))} placeholder="e.g. Mumbai Indians" required />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Tag (Max 4)</Label>
-                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold uppercase" maxLength={4} value={teamForm.shortName} onChange={(e) => setTeamForm((prev) => ({ ...prev, shortName: e.target.value.toUpperCase() }))} placeholder="MI" required />
+                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold uppercase" maxLength={4} value={teamForm.shortName} onChange={(ev) => setTeamForm((prev) => ({ ...prev, shortName: ev.target.value.toUpperCase() }))} placeholder="MI" required />
                            </div>
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Signature Color</Label>
                               <div className="flex gap-2">
-                                <Input type="color" className="w-12 h-12 p-1 bg-white/5 border-white/5 rounded-xl" value={teamForm.primaryColor} onChange={(e) => setTeamForm((prev) => ({ ...prev, primaryColor: e.target.value }))} />
-                                <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-mono text-[10px] font-black" value={teamForm.primaryColor} onChange={(e) => setTeamForm((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                <Input type="color" className="w-12 h-12 p-1 bg-white/5 border-white/5 rounded-xl" value={teamForm.primaryColor} onChange={(ev) => setTeamForm((prev) => ({ ...prev, primaryColor: ev.target.value }))} />
+                                <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-mono text-[10px] font-black" value={teamForm.primaryColor} onChange={(ev) => setTeamForm((prev) => ({ ...prev, primaryColor: ev.target.value }))} />
                               </div>
                            </div>
                         </div>
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Initial Purse (₹)</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={teamForm.purse} onChange={(e) => setTeamForm((prev) => ({ ...prev, purse: parseInt(e.target.value) }))} />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={teamForm.purse} onChange={(ev) => setTeamForm((prev) => ({ ...prev, purse: parseInt(ev.target.value) }))} />
                         </div>
                         <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={createTeam.isPending}>Establish Franchise</Button>
                       </form>
                     </div>
                   </div>
                   <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
-                    {teams?.map((team) => (
-                      <div key={team.id} className="p-6 glass-panel rounded-3xl flex items-center justify-between border-l-4" style={{ borderLeftColor: team.primaryColor }}>
+                    {teams?.map((teamItem) => (
+                      <div key={teamItem.id} className="p-6 glass-panel rounded-3xl flex items-center justify-between border-l-4" style={{ borderLeftColor: teamItem.primaryColor }}>
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black shadow-inner shadow-white/10" style={{ backgroundColor: team.primaryColor + "22", color: team.primaryColor }}>
-                            {team.shortName}
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black shadow-inner shadow-white/10" style={{ backgroundColor: teamItem.primaryColor + "22", color: teamItem.primaryColor }}>
+                            {teamItem.shortName}
                           </div>
                           <div>
-                            <div className="font-display font-black text-sm uppercase text-white tracking-tight">{team.name}</div>
-                            <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em]">{team.ownerName || "Unassigned Owner"}</div>
+                            <div className="font-display font-black text-sm uppercase text-white tracking-tight">{teamItem.name}</div>
+                            <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em]">{teamItem.ownerName || "Unassigned Owner"}</div>
                           </div>
                         </div>
                         <div className="text-right">
                            <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-0.5">Budget</div>
-                           <div className="font-display font-black text-primary text-sm">{formatMoney(team.remainingPurse)}</div>
+                           <div className="font-display font-black text-primary text-sm">{formatMoney(teamItem.remainingPurse)}</div>
                         </div>
                       </div>
                     ))}
