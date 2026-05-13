@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Tv, Settings2, ShieldAlert, History, Clock, Gavel, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
+import { clsx } from "clsx";
 
 export default function Lobby() {
   const { data: auctions, isLoading } = useListAuctions();
@@ -139,5 +140,3 @@ export default function Lobby() {
     </Layout>
   );
 }
-
-import { clsx } from "clsx";
