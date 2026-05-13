@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 type Tab = "auctions" | "players" | "teams" | "users";
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const [tab, setTab] = useState<Tab>("auctions");
   const { toast } = useToast();
 
@@ -43,7 +43,7 @@ export default function Admin() {
 
   const { data: users } = useListUsers();
 
-  if (user?.role !== "admin") {
+  if (currentUser?.role !== "admin") {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-[70vh] gap-6 text-center">
@@ -129,20 +129,20 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Auction Title</Label>
-                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.name} onChange={(e) => setAuctionForm((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. IPL 2024 Mega Auction" required />
+                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.name} onChange={(e) => setAuctionForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. IPL 2024 Mega Auction" required />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">League/Division</Label>
-                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.leagueName} onChange={(e) => setAuctionForm((p) => ({ ...p, leagueName: e.target.value }))} placeholder="e.g. Indian Premier League" required />
+                          <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={auctionForm.leagueName} onChange={(e) => setAuctionForm((prev) => ({ ...prev, leagueName: e.target.value }))} placeholder="e.g. Indian Premier League" required />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Timer (s)</Label>
-                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10} value={auctionForm.timerSeconds} onChange={(e) => setAuctionForm((p) => ({ ...p, timerSeconds: parseInt(e.target.value) }))} />
+                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10} value={auctionForm.timerSeconds} onChange={(e) => setAuctionForm((prev) => ({ ...prev, timerSeconds: parseInt(e.target.value) }))} />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Min Bid (₹)</Label>
-                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10000} value={auctionForm.bidIncrementMin} onChange={(e) => setAuctionForm((p) => ({ ...p, bidIncrementMin: parseInt(e.target.value) }))} />
+                            <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10000} value={auctionForm.bidIncrementMin} onChange={(e) => setAuctionForm((prev) => ({ ...prev, bidIncrementMin: parseInt(e.target.value) }))} />
                           </div>
                         </div>
                         <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={createAuction.isPending}>
@@ -152,27 +152,27 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="lg:col-span-8 space-y-4">
-                    {auctions?.map((a) => (
-                      <div key={a.id} className="group p-6 glass-panel rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all">
+                    {auctions?.map((auction) => (
+                      <div key={auction.id} className="group p-6 glass-panel rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all">
                         <div className="flex items-center gap-6">
                            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-primary/40 group-hover:text-primary transition-colors">
                               <Gavel className="w-6 h-6" />
                            </div>
                            <div>
-                              <div className="font-display font-black text-xl uppercase tracking-tight text-white">{a.name}</div>
-                              <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{a.leagueName}</div>
+                              <div className="font-display font-black text-xl uppercase tracking-tight text-white">{auction.name}</div>
+                              <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{auction.leagueName}</div>
                            </div>
                         </div>
                         <div className="flex items-center gap-6">
                            <div className="hidden md:block text-right">
                               <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuration</div>
-                              <div className="text-xs font-bold text-white/60">{a.timerSeconds}s · ₹{(a.bidIncrementMin/1000).toFixed(0)}k Incr</div>
+                              <div className="text-xs font-bold text-white/60">{auction.timerSeconds}s · ₹{(auction.bidIncrementMin/1000).toFixed(0)}k Incr</div>
                            </div>
                            <Badge className={cn(
                              "uppercase font-black tracking-widest px-4 py-2 rounded-full text-[10px]",
-                             a.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
+                             auction.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
                            )}>
-                             {a.status}
+                             {auction.status}
                            </Badge>
                         </div>
                       </div>
@@ -211,18 +211,18 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Full Name</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.name} onChange={(e) => setPlayerForm((p) => ({ ...p, name: e.target.value }))} required />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.name} onChange={(e) => setPlayerForm((prev) => ({ ...prev, name: e.target.value }))} required />
                         </div>
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Nationality</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.country} onChange={(e) => setPlayerForm((p) => ({ ...p, country: e.target.value }))} />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={playerForm.country} onChange={(e) => setPlayerForm((prev) => ({ ...prev, country: e.target.value }))} />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Role/Category</Label>
                           <select
                             className="w-full h-12 px-4 rounded-xl border border-white/5 bg-white/5 text-white text-sm font-bold appearance-none outline-none focus:border-primary"
                             value={playerForm.category}
-                            onChange={(e) => setPlayerForm((p) => ({ ...p, category: e.target.value }))}
+                            onChange={(e) => setPlayerForm((prev) => ({ ...prev, category: e.target.value }))}
                           >
                             <option value="batsman">Batsman</option>
                             <option value="bowler">Bowler</option>
@@ -233,7 +233,7 @@ export default function Admin() {
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Base Price (₹)</Label>
-                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={playerForm.basePrice} onChange={(e) => setPlayerForm((p) => ({ ...p, basePrice: parseInt(e.target.value) }))} />
+                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={playerForm.basePrice} onChange={(e) => setPlayerForm((prev) => ({ ...prev, basePrice: parseInt(e.target.value) }))} />
                            </div>
                            <div className="flex items-end">
                               <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest" disabled={createPlayer.isPending}>
@@ -250,21 +250,21 @@ export default function Admin() {
                        <span>Valuation & Status</span>
                     </div>
                     <div className="space-y-3 max-h-[600px] overflow-auto pr-2 no-scrollbar">
-                      {players?.map((p) => (
-                        <div key={p.id} className="p-4 glass-panel rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all">
+                      {players?.map((player) => (
+                        <div key={player.id} className="p-4 glass-panel rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black uppercase text-[10px]">
-                               {p.name.charAt(0)}
+                               {player.name.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-bold text-sm uppercase text-white">{p.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{p.country} · {p.category}</div>
+                              <div className="font-bold text-sm uppercase text-white">{player.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{player.country} · {player.category}</div>
                             </div>
                           </div>
                           <div className="text-right flex items-center gap-6">
                             <div>
-                              <div className="font-display font-black text-primary text-sm">{formatMoney(p.basePrice)}</div>
-                              <Badge variant="outline" className="text-[9px] uppercase border-white/10 font-black tracking-widest text-muted-foreground">{p.status}</Badge>
+                              <div className="font-display font-black text-primary text-sm">{formatMoney(player.basePrice)}</div>
+                              <Badge variant="outline" className="text-[9px] uppercase border-white/10 font-black tracking-widest text-muted-foreground">{player.status}</Badge>
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground opacity-20" />
                           </div>
@@ -298,44 +298,44 @@ export default function Admin() {
                       >
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Franchise Name</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={teamForm.name} onChange={(e) => setTeamForm((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Mumbai Indians" required />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" value={teamForm.name} onChange={(e) => setTeamForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. Mumbai Indians" required />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Tag (Max 4)</Label>
-                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold uppercase" maxLength={4} value={teamForm.shortName} onChange={(e) => setTeamForm((p) => ({ ...p, shortName: e.target.value.toUpperCase() }))} placeholder="MI" required />
+                              <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold uppercase" maxLength={4} value={teamForm.shortName} onChange={(e) => setTeamForm((prev) => ({ ...prev, shortName: e.target.value.toUpperCase() }))} placeholder="MI" required />
                            </div>
                            <div className="space-y-2">
                               <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Signature Color</Label>
                               <div className="flex gap-2">
-                                <Input type="color" className="w-12 h-12 p-1 bg-white/5 border-white/5 rounded-xl" value={teamForm.primaryColor} onChange={(e) => setTeamForm((p) => ({ ...p, primaryColor: e.target.value }))} />
-                                <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-mono text-[10px] font-black" value={teamForm.primaryColor} onChange={(e) => setTeamForm((p) => ({ ...p, primaryColor: e.target.value }))} />
+                                <Input type="color" className="w-12 h-12 p-1 bg-white/5 border-white/5 rounded-xl" value={teamForm.primaryColor} onChange={(e) => setTeamForm((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-mono text-[10px] font-black" value={teamForm.primaryColor} onChange={(e) => setTeamForm((prev) => ({ ...prev, primaryColor: e.target.value }))} />
                               </div>
                            </div>
                         </div>
                         <div className="space-y-2">
                            <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Initial Purse (₹)</Label>
-                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={teamForm.purse} onChange={(e) => setTeamForm((p) => ({ ...p, purse: parseInt(e.target.value) }))} />
+                           <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" value={teamForm.purse} onChange={(e) => setTeamForm((prev) => ({ ...prev, purse: parseInt(e.target.value) }))} />
                         </div>
                         <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={createTeam.isPending}>Establish Franchise</Button>
                       </form>
                     </div>
                   </div>
                   <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
-                    {teams?.map((t) => (
-                      <div key={t.id} className="p-6 glass-panel rounded-3xl flex items-center justify-between border-l-4" style={{ borderLeftColor: t.primaryColor }}>
+                    {teams?.map((team) => (
+                      <div key={team.id} className="p-6 glass-panel rounded-3xl flex items-center justify-between border-l-4" style={{ borderLeftColor: team.primaryColor }}>
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black shadow-inner shadow-white/10" style={{ backgroundColor: t.primaryColor + "22", color: t.primaryColor }}>
-                            {t.shortName}
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black shadow-inner shadow-white/10" style={{ backgroundColor: team.primaryColor + "22", color: team.primaryColor }}>
+                            {team.shortName}
                           </div>
                           <div>
-                            <div className="font-display font-black text-sm uppercase text-white tracking-tight">{t.name}</div>
-                            <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em]">{t.ownerName || "Unassigned Owner"}</div>
+                            <div className="font-display font-black text-sm uppercase text-white tracking-tight">{team.name}</div>
+                            <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em]">{team.ownerName || "Unassigned Owner"}</div>
                           </div>
                         </div>
                         <div className="text-right">
                            <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-0.5">Budget</div>
-                           <div className="font-display font-black text-primary text-sm">{formatMoney(t.remainingPurse)}</div>
+                           <div className="font-display font-black text-primary text-sm">{formatMoney(team.remainingPurse)}</div>
                         </div>
                       </div>
                     ))}
@@ -351,28 +351,28 @@ export default function Admin() {
                       <div className="text-xs font-black uppercase text-primary tracking-widest">{users?.length ?? 0} Accounts Active</div>
                    </div>
                    <div className="divide-y divide-white/5">
-                    {users?.map((u) => (
-                      <div key={u.id} className="p-6 flex items-center justify-between hover:bg-white/2 transition-colors px-10">
+                    {users?.map((userItem) => (
+                      <div key={userItem.id} className="p-6 flex items-center justify-between hover:bg-white/2 transition-colors px-10">
                         <div className="flex items-center gap-6">
                            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                               <Users className="w-6 h-6 text-muted-foreground opacity-40" />
                            </div>
                            <div>
-                             <div className="font-bold text-white uppercase tracking-tight">{u.name}</div>
-                             <div className="text-xs text-muted-foreground font-mono">{u.email}</div>
+                             <div className="font-bold text-white uppercase tracking-tight">{userItem.name}</div>
+                             <div className="text-xs text-muted-foreground font-mono">{userItem.email}</div>
                            </div>
                         </div>
                         <Badge
                           variant="outline"
                           className={cn(
                             "uppercase font-black text-[10px] tracking-widest px-4 py-1.5 rounded-full",
-                            u.role === "admin" ? "bg-destructive/10 text-destructive border-destructive/20" :
-                            u.role === "auctioneer" ? "bg-primary/10 text-primary border-primary/20" :
-                            u.role === "team_owner" ? "bg-green-500/10 text-green-400 border-green-500/20" :
+                            userItem.role === "admin" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                            userItem.role === "auctioneer" ? "bg-primary/10 text-primary border-primary/20" :
+                            userItem.role === "team_owner" ? "bg-green-500/10 text-green-400 border-green-500/20" :
                             "bg-white/5 text-muted-foreground border-white/10"
                           )}
                         >
-                          {u.role}
+                          {userItem.role}
                         </Badge>
                       </div>
                     ))}

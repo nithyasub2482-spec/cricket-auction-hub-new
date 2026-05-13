@@ -11,8 +11,8 @@ import { formatMoney, cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LiveAuction() {
-  const { id } = useParams();
-  const auctionId = parseInt(id || "0", 10);
+  const { id: auctionIdParam } = useParams();
+  const auctionId = parseInt(auctionIdParam || "0", 10);
   
   const { timerState, lastEvent } = useAuctionSocket(auctionId);
   useBidSounds(lastEvent, timerState);
@@ -91,21 +91,21 @@ export default function LiveAuction() {
                 </div>
                 <div className="flex-1 overflow-auto p-4 space-y-3 font-mono">
                    <AnimatePresence initial={false}>
-                      {bids?.slice(0, 20).map((bid, i) => (
+                      {bids?.slice(0, 20).map((bid, bidIndex) => (
                         <motion.div
                           key={bid.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           className={cn(
                             "p-3 rounded-xl border border-white/5 flex flex-col gap-1 transition-colors",
-                            i === 0 ? "bg-primary/10 border-primary/20" : "bg-white/5"
+                            bidIndex === 0 ? "bg-primary/10 border-primary/20" : "bg-white/5"
                           )}
                         >
                           <div className="flex justify-between items-center">
                              <span className="text-xs font-black uppercase tracking-tight text-white line-clamp-1">{bid.team.name}</span>
                              <span className="text-[10px] opacity-40">{new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                           </div>
-                          <div className={cn("text-lg font-black", i === 0 ? "text-primary" : "text-white")}>
+                          <div className={cn("text-lg font-black", bidIndex === 0 ? "text-primary" : "text-white")}>
                              {formatMoney(bid.amount)}
                           </div>
                         </motion.div>
@@ -199,7 +199,7 @@ export default function LiveAuction() {
              </AnimatePresence>
           </div>
 
-          {/* Right Column: Player Stats / Insights */}
+          {/* Player Stats / Insights */}
           <div className="xl:col-span-3 flex flex-col gap-6 order-3">
              <div className="glass-panel rounded-[2rem] p-6 space-y-6">
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
@@ -233,11 +233,11 @@ export default function LiveAuction() {
                      <div className="space-y-4">
                         <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Performance Radar</div>
                         <div className="h-32 w-full rounded-2xl bg-gradient-to-t from-primary/10 to-transparent border border-white/5 flex items-end p-4 gap-2">
-                           {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                           {[40, 70, 45, 90, 65, 80, 50].map((barHeight, barIndex) => (
                              <motion.div 
-                                key={i}
+                                key={barIndex}
                                 initial={{ height: 0 }}
-                                animate={{ height: `${h}%` }}
+                                animate={{ height: `${barHeight}%` }}
                                 className="flex-1 bg-primary/40 rounded-t-sm"
                              />
                            ))}

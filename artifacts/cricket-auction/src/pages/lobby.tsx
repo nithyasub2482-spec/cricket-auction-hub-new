@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function Lobby() {
   const { data: auctions, isLoading } = useListAuctions();
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
 
   return (
     <Layout>
@@ -110,7 +110,7 @@ export default function Lobby() {
                         </Button>
                       </Link>
                       
-                      {(user?.role === "admin" || user?.role === "auctioneer") && (
+                      {(currentUser?.role === "admin" || currentUser?.role === "auctioneer") && (
                         <Link href={`/auction/${auction.id}/control`}>
                           <Button variant="outline" className="w-full h-10 border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/10">
                             <Settings2 className="w-3.5 h-3.5" />

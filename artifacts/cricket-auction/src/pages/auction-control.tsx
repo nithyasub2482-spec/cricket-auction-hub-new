@@ -18,8 +18,8 @@ import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AuctionControl() {
-  const { id } = useParams();
-  const auctionId = parseInt(id || "0", 10);
+  const { id: auctionIdParam } = useParams();
+  const auctionId = parseInt(auctionIdParam || "0", 10);
   
   const { timerState, lastEvent } = useAuctionSocket(auctionId);
   useBidSounds(lastEvent, timerState);
@@ -63,7 +63,7 @@ export default function AuctionControl() {
       <div className="max-w-[1600px] mx-auto space-y-8 h-full flex flex-col">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-8">
            <div className="space-y-1">
               <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
                  <Shield className="w-3 h-3 fill-current" /> Command Center
@@ -243,22 +243,22 @@ export default function AuctionControl() {
                    </div>
                 </div>
                 <div className="flex-1 overflow-auto p-4 space-y-3">
-                   {players?.map(player => (
+                   {players?.map(playerItem => (
                      <motion.div 
-                       key={player.id} 
+                       key={playerItem.id} 
                        initial={{ opacity: 0 }} 
                        animate={{ opacity: 1 }}
                        className="group p-4 rounded-[1.5rem] bg-white/2 border border-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 flex justify-between items-center"
                      >
                         <div className="space-y-1">
-                           <div className="text-sm font-black uppercase tracking-tight text-white">{player.name}</div>
-                           <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{player.category} · {player.country}</div>
-                           <div className="text-xs font-display font-black text-primary/70">{formatMoney(player.basePrice)}</div>
+                           <div className="text-sm font-black uppercase tracking-tight text-white">{playerItem.name}</div>
+                           <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{playerItem.category} · {playerItem.country}</div>
+                           <div className="text-xs font-display font-black text-primary/70">{formatMoney(playerItem.basePrice)}</div>
                         </div>
                         <Button 
                           size="sm" 
                           className="h-10 px-4 rounded-xl font-black uppercase text-[10px] tracking-widest opacity-0 group-hover:opacity-100 transition-all shadow-xl shadow-primary/20"
-                          onClick={() => selectPlayerMutation.mutate({ id: auctionId, data: { playerId: player.id } })}
+                          onClick={() => selectPlayerMutation.mutate({ id: auctionId, data: { playerId: playerItem.id } })}
                           disabled={selectPlayerMutation.isPending || !!slot?.player || auction.status !== 'active'}
                         >
                           Select
