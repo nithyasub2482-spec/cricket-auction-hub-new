@@ -438,7 +438,7 @@ router.get("/auctions/:id/current-slot", async (req, res): Promise<void> => {
     .from(auctionsTable)
     .where(eq(auctionsTable.id, params.data.id));
   if (!auction || !auction.currentSlotId) {
-    res.status(404).json({ error: "No active slot" });
+    res.json(null);
     return;
   }
   const [slot] = await db

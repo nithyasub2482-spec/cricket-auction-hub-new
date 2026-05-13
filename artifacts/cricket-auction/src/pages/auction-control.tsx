@@ -31,10 +31,14 @@ export default function AuctionControl() {
   });
   
   const { data: slot } = useGetCurrentSlot(auctionId, {
-    query: { enabled: !!auctionId && (auction?.status === "active" || auction?.status === "paused"), queryKey: getGetCurrentSlotQueryKey(auctionId) }
+    query: { 
+      enabled: !!auctionId && !!auction?.currentSlotId && (auction?.status === "active" || auction?.status === "paused"), 
+      queryKey: [...getGetCurrentSlotQueryKey(auctionId), auction?.currentSlotId] 
+    }
   });
   
-  const { data: players } = useListPlayers({ status: "unsold", search: searchTerm });
+  const { data: allPlayers } = useListPlayers({ search: searchTerm });
+  const players = allPlayers?.filter(p => p.status === 'available' || p.status === 'unsold');
   const { data: teams } = useListTeams();
   
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
