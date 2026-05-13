@@ -27,12 +27,11 @@
     --ring: 199 89% 48%;
     --radius: 0.75rem;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
+  
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-image: 
