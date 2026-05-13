@@ -14,6 +14,7 @@ import {
   ListAuctionSlotsParams,
   GetCurrentSlotParams,
   GetAuctionBidsParams,
+  GetSlotBidsParams,
   PlaceBidParams,
   PlaceBidBody,
 } from "@workspace/api-zod";
@@ -465,6 +466,58 @@ router.get("/auctions/:id/bids", async (req, res): Promise<void> => {
     .from(bidsTable)
     .innerJoin(teamsTable, eq(bidsTable.teamId, teamsTable.id))
     .where(eq(bidsTable.auctionId, params.data.id))
+    .orderBy(desc(bidsTable.createdAt));
+
+  res.json(
+    bids.map(({ bid, team }) => ({
+      id: bid.id,
+      auctionId: bid.auctionId,
+      slotId: bid.slotId,
+      teamId: bid.teamId,
+      team: {
+        id: team.id,
+        name: team.name,
+        shortName: team.shortName,
+        primaryColor: team.primaryColor,
+        secondaryColor: team.secondaryColor,
+        logoUrl: team.logoUrl,
+        purse: Number(team.purse),
+        remainingPurse: Number(team.remainingPurse),
+        maxPlayers: team.maxPlayers,
+        maxOverseas: team.maxOverseas,
+        ownerId: team.ownerId,
+        ownerName: team.ownerName,
+        createdAt: team.createdAt.toISOString(),
+      },
+      amount: Number(bid.amount),
+      createdAt: bid.createdAt.toISOString(),
+    })),
+  );
+});
+
+// Get bids for a specific slot
+router.get("/auctions/:id/slots/:slotId/bids", async (req, res): Promise<void> => {
+  const params = GetSlotBidsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [slot] = await db
+    .select()
+    .from(auctionSlotsTable)
+    .where(eq(auctionSlotsTable.id, params.data.slotId));
+
+  if (!slot || slot.auctionId !== params.data.id) {
+    res.status(404).json({ error: "Slot not found" });
+    return;
+  }
+
+  const bids = await db
+    .select({ bid: bidsTable, team: teamsTable })
+    .from(bidsTable)
+    .innerJoin(teamsTable, eq(bidsTable.teamId, teamsTable.id))
+    .where(eq(bidsTable.slotId, params.data.slotId))
     .orderBy(desc(bidsTable.createdAt));
 
   res.json(

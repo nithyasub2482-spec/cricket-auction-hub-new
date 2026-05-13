@@ -2111,6 +2111,96 @@ export function useListAuctionSlots<
 }
 
 /**
+ * @summary Get all bids for a specific auction slot
+ */
+export const getGetSlotBidsUrl = (id: number, slotId: number) => {
+  return `/api/auctions/${id}/slots/${slotId}/bids`;
+};
+
+export const getSlotBids = async (
+  id: number,
+  slotId: number,
+  options?: RequestInit,
+): Promise<Bid[]> => {
+  return customFetch<Bid[]>(getGetSlotBidsUrl(id, slotId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlotBidsQueryKey = (id: number, slotId: number) => {
+  return [`/api/auctions/${id}/slots/${slotId}/bids`] as const;
+};
+
+export const getGetSlotBidsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlotBids>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  slotId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSlotBids>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlotBidsQueryKey(id, slotId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlotBids>>> = ({
+    signal,
+  }) => getSlotBids(id, slotId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(id && slotId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSlotBids>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSlotBidsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlotBids>>
+>;
+export type GetSlotBidsQueryError = ErrorType<void>;
+
+/**
+ * @summary Get all bids for a specific auction slot
+ */
+
+export function useGetSlotBids<
+  TData = Awaited<ReturnType<typeof getSlotBids>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  slotId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSlotBids>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSlotBidsQueryOptions(id, slotId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Get current active slot
  */
 export const getGetCurrentSlotUrl = (id: number) => {

@@ -498,6 +498,34 @@ paths:
                 items:
                   $ref: "#/components/schemas/AuctionSlot"
 
+  /auctions/{id}/slots/{slotId}/bids:
+    get:
+      operationId: getSlotBids
+      tags: [bids]
+      summary: Get all bids for a specific auction slot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Slot bids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bid"
+        "404":
+          description: Slot not found
+
   /auctions/{id}/current-slot:
     get:
       operationId: getCurrentSlot

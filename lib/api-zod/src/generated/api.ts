@@ -851,6 +851,41 @@ export const ListAuctionSlotsResponseItem = zod.object({
 export const ListAuctionSlotsResponse = zod.array(ListAuctionSlotsResponseItem);
 
 /**
+ * @summary Get all bids for a specific auction slot
+ */
+export const GetSlotBidsParams = zod.object({
+  id: zod.coerce.number(),
+  slotId: zod.coerce.number(),
+});
+
+export const GetSlotBidsResponseItem = zod.object({
+  id: zod.number(),
+  auctionId: zod.number(),
+  slotId: zod.number(),
+  teamId: zod.number(),
+  team: zod
+    .object({
+      id: zod.number(),
+      name: zod.string(),
+      shortName: zod.string(),
+      primaryColor: zod.string(),
+      secondaryColor: zod.string().nullish(),
+      logoUrl: zod.string().nullish(),
+      purse: zod.number(),
+      remainingPurse: zod.number(),
+      maxPlayers: zod.number(),
+      maxOverseas: zod.number().optional(),
+      ownerId: zod.number().nullish(),
+      ownerName: zod.string().nullish(),
+      createdAt: zod.string(),
+    })
+    .optional(),
+  amount: zod.number(),
+  createdAt: zod.string(),
+});
+export const GetSlotBidsResponse = zod.array(GetSlotBidsResponseItem);
+
+/**
  * @summary Get current active slot
  */
 export const GetCurrentSlotParams = zod.object({

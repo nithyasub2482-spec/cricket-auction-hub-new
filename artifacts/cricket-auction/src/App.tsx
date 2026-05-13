@@ -16,6 +16,8 @@ import Admin from "@/pages/admin";
 import LiveAuction from "@/pages/live-auction";
 import AuctionControl from "@/pages/auction-control";
 import AuctionDisplay from "@/pages/auction-display";
+import AuctionHistory from "@/pages/auction-history";
+import SlotReplay from "@/pages/slot-replay";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/auction/:id" component={LiveAuction} />
       <Route path="/auction/:id/control" component={AuctionControl} />
       <Route path="/auction/:id/display" component={AuctionDisplay} />
+      <Route path="/auction/:id/history" component={AuctionHistory} />
+      <Route path="/auction/:id/slots/:slotId" component={SlotReplay} />
       <Route component={NotFound} />
     </Switch>
   );

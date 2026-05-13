@@ -4,7 +4,7 @@ import { useListAuctions, getListAuctionsQueryKey } from "@workspace/api-client-
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Tv, Settings2, ShieldAlert } from "lucide-react";
+import { Play, Tv, Settings2, ShieldAlert, History } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Lobby() {
@@ -57,16 +57,22 @@ export default function Lobby() {
                     </Button>
                   </Link>
                   
-                  <div className="grid grid-cols-2 gap-2 w-full">
+                  <div className="grid grid-cols-3 gap-2 w-full">
                     <Link href={`/auction/${auction.id}/display`} className="w-full">
-                      <Button variant="outline" className="w-full text-xs gap-2">
+                      <Button variant="outline" className="w-full text-xs gap-1">
                         <Tv className="w-3 h-3" /> Display
+                      </Button>
+                    </Link>
+
+                    <Link href={`/auction/${auction.id}/history`} className="w-full">
+                      <Button variant="outline" className="w-full text-xs gap-1">
+                        <History className="w-3 h-3" /> History
                       </Button>
                     </Link>
                     
                     {(user?.role === "admin" || user?.role === "auctioneer") && (
                       <Link href={`/auction/${auction.id}/control`} className="w-full">
-                        <Button variant="outline" className="w-full text-xs gap-2 border-primary/20 hover:bg-primary/10 hover:text-primary">
+                        <Button variant="outline" className="w-full text-xs gap-1 border-primary/20 hover:bg-primary/10 hover:text-primary">
                           <Settings2 className="w-3 h-3" /> Control
                         </Button>
                       </Link>
