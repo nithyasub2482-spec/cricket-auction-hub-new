@@ -37,7 +37,9 @@ export default function AuctionControl() {
     }
   });
   
-  const { data: allPlayers } = useListPlayers({ search: searchTerm });
+  const { data: allPlayers } = useListPlayers(
+    searchTerm ? { search: searchTerm } : {}
+  );
   const players = allPlayers?.filter(p => p.status === 'available' || p.status === 'unsold');
   const { data: teams } = useListTeams();
   
