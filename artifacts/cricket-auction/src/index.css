@@ -35,29 +35,42 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    @apply font-sans antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-image: 
       radial-gradient(at 0% 0%, hsla(199, 89%, 48%, 0.05) 0px, transparent 50%),
       radial-gradient(at 100% 0%, hsla(263, 70%, 50%, 0.05) 0px, transparent 50%);
   }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.025em;
   }
 }
 
 @layer components {
   .glass-panel {
     background-color: hsl(var(--card) / 0.6);
-    @apply backdrop-blur-md border border-white/5 shadow-2xl;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
   
   .stadium-border {
-    @apply border-t-2 border-primary/30 relative;
+    border-top-width: 2px;
+    border-top-color: hsl(var(--primary) / 0.3);
+    position: relative;
   }
   
   .stadium-border::before {
     content: '';
-    @apply absolute top-0 left-0 w-full h-px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
     background: linear-gradient(to right, transparent, hsl(var(--primary) / 0.5), transparent);
   }
 
