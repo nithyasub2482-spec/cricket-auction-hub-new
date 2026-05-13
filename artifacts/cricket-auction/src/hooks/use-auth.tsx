@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem("auth_token"));
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useGetMe({
@@ -28,13 +28,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) {
-      setLocation("/login");
+      if (location !== "/login") {
+        setLocation("/login");
+      }
+    } else if (location === "/login") {
+      setLocation("/");
     }
-  }, [token, setLocation]);
+  }, [token, location, setLocation]);
 
   const login = (newToken: string) => {
     localStorage.setItem("auth_token", newToken);
     setToken(newToken);
+    setLocation("/");
   };
 
   const logout = () => {
