@@ -7,6 +7,7 @@ import {
   useMarkPlayerSold, useMarkPlayerUnsold, useListPlayers
 } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,8 @@ export default function AuctionControl() {
   const { id } = useParams();
   const auctionId = parseInt(id || "0", 10);
   
-  const { timerState } = useAuctionSocket(auctionId);
+  const { timerState, lastEvent } = useAuctionSocket(auctionId);
+  useBidSounds(lastEvent, timerState);
   
   const [searchTerm, setSearchTerm] = useState("");
   

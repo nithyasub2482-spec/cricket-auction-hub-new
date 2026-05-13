@@ -1,6 +1,7 @@
 import { useParams } from "wouter";
 import { useGetAuction, getGetAuctionQueryKey, useGetCurrentSlot, getGetCurrentSlotQueryKey } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
@@ -9,7 +10,8 @@ export default function AuctionDisplay() {
   const { id } = useParams();
   const auctionId = parseInt(id || "0", 10);
   
-  const { timerState } = useAuctionSocket(auctionId);
+  const { timerState, lastEvent } = useAuctionSocket(auctionId);
+  useBidSounds(lastEvent, timerState);
   
   const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
     query: { enabled: !!auctionId, queryKey: getGetAuctionQueryKey(auctionId) }

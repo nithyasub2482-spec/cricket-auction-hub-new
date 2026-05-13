@@ -2,6 +2,7 @@ import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
 import { useGetAuction, getGetAuctionQueryKey, useGetCurrentSlot, getGetCurrentSlotQueryKey, useGetAuctionBids, getGetAuctionBidsQueryKey, usePlaceBid } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
+import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,8 @@ export default function LiveAuction() {
   const auctionId = parseInt(id || "0", 10);
   const { user } = useAuth();
   
-  const { connected, timerState } = useAuctionSocket(auctionId);
+  const { connected, timerState, lastEvent } = useAuctionSocket(auctionId);
+  useBidSounds(lastEvent, timerState);
   
   const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
     query: { enabled: !!auctionId, queryKey: getGetAuctionQueryKey(auctionId) }
