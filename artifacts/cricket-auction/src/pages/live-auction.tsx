@@ -1,3 +1,4 @@
+import React from "react";
 import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
 import { useGetAuction, useGetCurrentSlot, useListAuctionBids, getGetAuctionQueryKey, getGetCurrentSlotQueryKey, getGetAuctionBidsQueryKey } from "@workspace/api-client-react";
@@ -5,9 +6,8 @@ import { useAuctionSocket } from "@/hooks/useAuctionSocket";
 import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Loader2, Gavel, Users, Trophy, TrendingUp, History, Star } from "lucide-react";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LiveAuction() {
@@ -67,8 +67,8 @@ export default function LiveAuction() {
               <div className="flex items-center gap-4">
                  {timerState && slot?.status === "active" && (
                    <div className="relative group">
-                      <div className="absolute -inset-2 bg-primary/20 blur-xl rounded-full group-hover:bg-primary/40 transition-colors" />
-                      <CountdownTimer timer={timerState} size="lg" />
+                       <div className="absolute -inset-2 bg-primary/20 blur-xl rounded-full group-hover:bg-primary/40 transition-colors" />
+                       <CountdownTimer timer={timerState} size="lg" />
                    </div>
                  )}
                  <Badge variant="outline" className="h-12 px-6 rounded-2xl border-white/10 bg-white/5 text-lg font-black uppercase text-white">
@@ -96,13 +96,16 @@ export default function LiveAuction() {
                           key={bid.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className={`p-3 rounded-xl border border-white/5 flex flex-col gap-1 transition-colors ${i === 0 ? "bg-primary/10 border-primary/20" : "bg-white/5"}`}
+                          className={cn(
+                            "p-3 rounded-xl border border-white/5 flex flex-col gap-1 transition-colors",
+                            i === 0 ? "bg-primary/10 border-primary/20" : "bg-white/5"
+                          )}
                         >
                           <div className="flex justify-between items-center">
                              <span className="text-xs font-black uppercase tracking-tight text-white line-clamp-1">{bid.team.name}</span>
                              <span className="text-[10px] opacity-40">{new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                           </div>
-                          <div className={`text-lg font-black ${i === 0 ? "text-primary" : "text-white"}`}>
+                          <div className={cn("text-lg font-black", i === 0 ? "text-primary" : "text-white")}>
                              {formatMoney(bid.amount)}
                           </div>
                         </motion.div>
@@ -178,7 +181,7 @@ export default function LiveAuction() {
                              ) : (
                                <div className="text-sm font-bold text-muted-foreground italic opacity-50 uppercase tracking-widest">
                                   Opening Bids Invited...
-                               </div>
+                                </div>
                              )}
                           </div>
                        </div>
