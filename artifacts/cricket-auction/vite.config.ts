@@ -54,3 +54,4 @@ export default defineConfig({
     allowedHosts: true,
   },
 });
+// build fix
