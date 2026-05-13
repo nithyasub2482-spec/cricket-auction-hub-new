@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { useListAuctions } from "@workspace/api-client-react";
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Tv, Settings2, ShieldAlert, History, Clock, Gavel, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
-import { clsx } from "clsx";
+import { cn } from "@/lib/utils";
 
 export default function Lobby() {
   const { data: auctions, isLoading } = useListAuctions();
@@ -55,7 +56,7 @@ export default function Lobby() {
                   <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
                   
                   <div className="flex justify-between items-start mb-6">
-                    <Badge className={clsx(
+                    <Badge className={cn(
                       "uppercase font-black tracking-[0.1em] text-[10px] px-3 py-1 rounded-full",
                       auction.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
                     )}>

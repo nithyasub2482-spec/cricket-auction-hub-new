@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
 import { 
@@ -11,13 +12,10 @@ import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell, Shield, UserPlus, Info, Star } from "lucide-react";
-import { formatMoney } from "@/lib/utils";
-import { useState } from "react";
+import { formatMoney, cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { clsx } from "clsx";
 
 export default function AuctionControl() {
   const { id } = useParams();
@@ -149,7 +147,7 @@ export default function AuctionControl() {
                       </div>
                     )}
 
-                    <div className={clsx(
+                    <div className={cn(
                       "glass-panel rounded-[3rem] p-10 border-2 transition-all duration-500",
                       timerExpired ? "border-destructive/40 shadow-[0_0_50px_rgba(var(--destructive),0.1)]" : "border-primary/20 shadow-[0_0_50px_rgba(var(--primary),0.1)]"
                     )}>
@@ -189,7 +187,7 @@ export default function AuctionControl() {
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <Button 
                             size="lg" 
-                            className={clsx(
+                            className={cn(
                               "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg shadow-2xl transition-all duration-300",
                               timerExpired && hasActiveBid ? "bg-green-500 hover:bg-green-400 scale-[1.02] shadow-green-500/20" : "bg-white text-black hover:bg-white/90"
                             )}
@@ -201,7 +199,7 @@ export default function AuctionControl() {
                           <Button 
                             size="lg" 
                             variant="outline"
-                            className={clsx(
+                            className={cn(
                               "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg transition-all duration-300 border-white/10",
                               timerExpired && !hasActiveBid ? "bg-destructive text-white border-none shadow-2xl shadow-destructive/20" : "hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
                             )}

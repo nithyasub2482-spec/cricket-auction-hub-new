@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Layout } from "@/components/layout";
 import {
   useListAuctions,
@@ -15,8 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { Plus, Trophy, Users, ShieldCheck, Gavel, UserPlus, Shield, ChevronRight } from "lucide-react";
-import { formatMoney } from "@/lib/utils";
-import { clsx } from "clsx";
+import { formatMoney, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -53,7 +52,7 @@ export default function Admin() {
           </div>
           <div className="space-y-2">
             <h2 className="text-3xl font-display font-black uppercase tracking-tight text-white">Access Denied</h2>
-            <p className="text-muted-foreground max-w-sm">This terminal is restricted to authorized administrators only. Security clearance not detected.</p>
+            <p className="text-muted-foreground max-sm">This terminal is restricted to authorized administrators only. Security clearance not detected.</p>
           </div>
           <Button variant="outline" className="mt-4 border-white/10" onClick={() => window.history.back()}>Return to Safety</Button>
         </div>
@@ -85,7 +84,7 @@ export default function Admin() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={clsx(
+                  className={cn(
                     "flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
                     tab === t.id
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
@@ -169,7 +168,7 @@ export default function Admin() {
                               <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuration</div>
                               <div className="text-xs font-bold text-white/60">{a.timerSeconds}s · ₹{(a.bidIncrementMin/1000).toFixed(0)}k Incr</div>
                            </div>
-                           <Badge className={clsx(
+                           <Badge className={cn(
                              "uppercase font-black tracking-widest px-4 py-2 rounded-full text-[10px]",
                              a.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
                            )}>
@@ -365,7 +364,7 @@ export default function Admin() {
                         </div>
                         <Badge
                           variant="outline"
-                          className={clsx(
+                          className={cn(
                             "uppercase font-black text-[10px] tracking-widest px-4 py-1.5 rounded-full",
                             u.role === "admin" ? "bg-destructive/10 text-destructive border-destructive/20" :
                             u.role === "auctioneer" ? "bg-primary/10 text-primary border-primary/20" :

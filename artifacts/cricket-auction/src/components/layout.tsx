@@ -1,9 +1,9 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Activity, Users, Shield, Trophy, LayoutDashboard, LogOut, Star, Menu, X } from "lucide-react";
-import { clsx } from "clsx";
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -27,14 +27,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <Link
         href={item.href}
         onClick={onClick}
-        className={clsx(
+        className={cn(
           "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all duration-300",
           active 
             ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
             : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
         )}
       >
-        <item.icon className={clsx("w-5 h-5 transition-transform group-hover:scale-110", active ? "text-white" : "text-primary/70")} />
+        <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", active ? "text-white" : "text-primary/70")} />
         {item.label}
       </Link>
     );
