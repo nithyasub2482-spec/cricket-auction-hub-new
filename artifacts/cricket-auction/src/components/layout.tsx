@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Activity, Users, Shield, Trophy, LayoutDashboard, LogOut } from "lucide-react";
+import { Activity, Users, Shield, Trophy, LayoutDashboard, LogOut, Star } from "lucide-react";
 import { clsx } from "clsx";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -12,6 +12,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/players", label: "Players", icon: Users },
     { href: "/teams", label: "Teams", icon: Trophy },
     { href: "/analytics", label: "Analytics", icon: Activity },
+    ...(user?.role === "team_owner" && user?.teamId ? [{ href: "/my-team", label: "My Team", icon: Star }] : []),
     ...(user?.role === "admin" || user?.role === "commissioner" ? [{ href: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
