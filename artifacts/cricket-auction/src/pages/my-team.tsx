@@ -12,8 +12,12 @@ import { Button } from "@/components/ui/button";
 import {
   Loader2, Wallet, Users, Star, ShieldOff, ChevronRight,
   Crosshair, TrendingUp, Dumbbell, Wind, Zap, Trophy,
+  Radio, Gavel, TrendingDown,
 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
+import { useMyTeamSocket } from "@/hooks/useMyTeamSocket";
+import { motion, AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,6 +96,9 @@ export default function MyTeam() {
   const { user } = useAuth();
 
   const teamId = user?.teamId ?? null;
+
+  // Real-time WebSocket updates
+  const { connected, liveActivity } = useMyTeamSocket(teamId);
 
   const { data: team, isLoading: tLoading } = useGetTeam(teamId ?? 0, {
     query: { enabled: !!teamId, queryKey: getGetTeamQueryKey(teamId ?? 0) },
@@ -197,6 +204,9 @@ export default function MyTeam() {
 
   return (
     <Layout>
+      {/* Toast portal */}
+      <Toaster position="top-right" richColors />
+
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ── Header ──────────────────────────────────────────────────── */}
@@ -208,6 +218,11 @@ export default function MyTeam() {
                 style={{ backgroundColor: team.primaryColor }}
               />
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">My Franchise</span>
+              {/* Live connection dot */}
+              <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${connected ? "border-green-700/50 bg-green-900/20 text-green-400" : "border-border bg-secondary text-muted-foreground"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-green-400 animate-pulse" : "bg-muted-foreground"}`} />
+                {connected ? "Live" : "Connecting…"}
+              </div>
             </div>
             <h1 className="text-4xl font-black uppercase tracking-tight text-foreground">{team.name}</h1>
             <p className="text-muted-foreground mt-1 font-mono text-sm">{team.shortName} · Owner: {team.ownerName ?? user?.name}</p>
@@ -218,6 +233,93 @@ export default function MyTeam() {
             </Button>
           </Link>
         </div>
+
+        {/* ── Live Activity Banner ─────────────────────────────────────── */}
+        <AnimatePresence>
+          {liveActivity && (
+            <motion.div
+              key="live-activity"
+              initial={{ opacity: 0, y: -16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.97 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <Card className={`border-2 overflow-hidden ${liveActivity.isMyTeamLeading ? "border-green-600/60 bg-green-900/10" : "border-amber-600/40 bg-amber-900/10"}`}>
+                <div className="flex items-center gap-4 p-5">
+                  {/* Pulsing live indicator */}
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-900/30 border border-red-700/40 shrink-0">
+                    <Radio className="w-5 h-5 text-red-400 animate-pulse" />
+                  </div>
+
+                  {/* Player info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Auction Live</span>
+                      <Badge variant="outline" className="text-[10px] uppercase font-mono border-border">
+                        {liveActivity.playerCategory.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <div className="text-xl font-black uppercase tracking-tight text-foreground truncate">
+                      {liveActivity.playerName}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-0.5">
+                      <span className="font-mono">Base: {formatMoney(liveActivity.basePrice)}</span>
+                      <span className="font-mono">{liveActivity.bidCount} bid{liveActivity.bidCount !== 1 ? "s" : ""}</span>
+                    </div>
+                  </div>
+
+                  {/* Current bid */}
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Current Bid</div>
+                    <motion.div
+                      key={liveActivity.currentBid}
+                      initial={{ scale: 1.15, color: "#f59e0b" }}
+                      animate={{ scale: 1, color: "#ffffff" }}
+                      transition={{ duration: 0.4 }}
+                      className="text-3xl font-black font-mono"
+                    >
+                      {formatMoney(liveActivity.currentBid)}
+                    </motion.div>
+                    {liveActivity.leadingTeamName && (
+                      <div className="flex items-center gap-1.5 justify-end mt-1">
+                        {liveActivity.leadingTeamColor && (
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: liveActivity.leadingTeamColor }} />
+                        )}
+                        <span className="text-xs font-bold text-muted-foreground">{liveActivity.leadingTeamName}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status badge */}
+                  <div className="shrink-0 ml-2">
+                    {liveActivity.isMyTeamLeading ? (
+                      <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-green-900/40 border border-green-600/50">
+                        <Gavel className="w-5 h-5 text-green-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-green-400 whitespace-nowrap">
+                          You're Leading!
+                        </span>
+                      </div>
+                    ) : liveActivity.bidCount > 0 ? (
+                      <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-amber-900/30 border border-amber-600/40">
+                        <TrendingDown className="w-5 h-5 text-amber-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 whitespace-nowrap">
+                          Outbid
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-secondary border border-border">
+                        <Gavel className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                          Bidding Open
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Top metrics row ──────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
