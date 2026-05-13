@@ -1,23 +1,20 @@
 import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
-import { useGetAuction, getGetAuctionQueryKey, useGetCurrentSlot, getGetCurrentSlotQueryKey, useGetAuctionBids, getGetAuctionBidsQueryKey, usePlaceBid } from "@workspace/api-client-react";
+import { useGetAuction, useGetCurrentSlot, useListAuctionBids, getGetAuctionQueryKey, getGetCurrentSlotQueryKey, getGetAuctionBidsQueryKey } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
 import { useBidSounds } from "@/hooks/useBidSounds";
 import { CountdownTimer } from "@/components/countdown-timer";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Gavel, User as UserIcon, Trophy, History, AlertTriangle } from "lucide-react";
+import { Loader2, Gavel, Users, Trophy, TrendingUp, History, Star } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LiveAuction() {
   const { id } = useParams();
   const auctionId = parseInt(id || "0", 10);
-  const { user } = useAuth();
   
-  const { connected, timerState, lastEvent } = useAuctionSocket(auctionId);
+  const { timerState, lastEvent } = useAuctionSocket(auctionId);
   useBidSounds(lastEvent, timerState);
   
   const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
@@ -25,31 +22,12 @@ export default function LiveAuction() {
   });
   
   const { data: slot, isLoading: slotLoading } = useGetCurrentSlot(auctionId, {
-    query: { enabled: !!auctionId && auction?.status === "active", queryKey: getGetCurrentSlotQueryKey(auctionId) }
+    query: { enabled: !!auctionId, queryKey: getGetCurrentSlotQueryKey(auctionId) }
   });
-  
-  const { data: bids } = useGetAuctionBids(auctionId, {
-    query: { enabled: !!auctionId && !!slot?.id, queryKey: getGetAuctionBidsQueryKey(auctionId) }
-  });
-  
-  const placeBidMutation = usePlaceBid();
-  
-  const handleBid = () => {
-    if (!slot || !user?.teamId) return;
-    const nextAmount = (slot.currentBid ?? slot.basePrice) + (auction?.bidIncrementMin ?? 0);
-    placeBidMutation.mutate({
-      id: slot.id,
-      data: {
-        slotId: slot.id,
-        teamId: user.teamId,
-        amount: nextAmount,
-      }
-    });
-  };
 
-  const isBiddingActive = auction?.status === "active" && slot?.status === "active";
-  const timerExpired = timerState?.expired ?? false;
-  const player = slot?.player;
+  const { data: bids } = useListAuctionBids(auctionId, {
+    query: { enabled: !!auctionId, queryKey: getGetAuctionBidsQueryKey(auctionId) }
+  });
 
   if (auctionLoading) {
     return (
@@ -61,191 +39,233 @@ export default function LiveAuction() {
     );
   }
 
-  if (!auction) {
-    return (
-      <Layout>
-        <div className="text-center py-20 text-destructive font-bold text-2xl uppercase tracking-wider">
-          Auction Not Found
-        </div>
-      </Layout>
-    );
-  }
+  if (!auction) return null;
 
   return (
     <Layout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-6rem)]">
+      <div className="max-w-[1600px] mx-auto h-full flex flex-col gap-8 pb-10">
         
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="flex items-center justify-between bg-card p-4 rounded border border-border">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight">{auction.name}</h2>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <div className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`} />
-                {connected ? "LIVE" : "OFFLINE"}
+        {/* Top Branding Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-8">
+           <div className="space-y-1">
+              <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+                 <Star className="w-3 h-3 fill-current" /> Live Broadcast
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {timerState && slot?.status === "active" && (
-                <CountdownTimer timer={timerState} size="md" />
-              )}
-              <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
-                {auction.status}
-              </Badge>
-            </div>
-          </div>
+              <h1 className="text-3xl font-display font-black uppercase tracking-tight text-white">{auction.name}</h1>
+              <div className="text-sm text-muted-foreground uppercase font-bold tracking-widest">{auction.leagueName}</div>
+           </div>
+           
+           <div className="flex items-center gap-6">
+              <div className="hidden lg:flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/5 rounded-2xl">
+                 <div className="text-right">
+                    <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Active Bidders</div>
+                    <div className="text-lg font-display font-black text-white">24 Teams</div>
+                 </div>
+                 <Users className="w-8 h-8 text-primary/40" />
+              </div>
+              
+              <div className="flex items-center gap-4">
+                 {timerState && slot?.status === "active" && (
+                   <div className="relative group">
+                      <div className="absolute -inset-2 bg-primary/20 blur-xl rounded-full group-hover:bg-primary/40 transition-colors" />
+                      <CountdownTimer timer={timerState} size="lg" />
+                   </div>
+                 )}
+                 <Badge variant="outline" className="h-12 px-6 rounded-2xl border-white/10 bg-white/5 text-lg font-black uppercase text-white">
+                   {auction.status}
+                 </Badge>
+              </div>
+           </div>
+        </div>
 
-          {/* Timer expired banner for team owners */}
-          <AnimatePresence>
-            {timerExpired && slot?.status === "active" && user?.role === "team_owner" && (
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                className="flex items-center gap-3 px-5 py-3 rounded border border-destructive/50 bg-destructive/10 text-destructive font-bold uppercase tracking-wider"
-              >
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                Bidding time has ended — awaiting auctioneer decision
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <Card className="flex-1 flex flex-col overflow-hidden border-2 border-border relative bg-card">
-            {slotLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
-              </div>
-            ) : !slot || !player ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center space-y-4">
-                <Trophy className="w-24 h-24 text-border" />
-                <h3 className="text-2xl font-bold uppercase tracking-widest text-foreground">Waiting for Next Player</h3>
-                <p>The auctioneer will select the next player shortly.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col h-full">
-                <div className="bg-secondary/30 p-8 border-b border-border flex gap-8 items-center relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-                    <UserIcon className="w-64 h-64" />
-                  </div>
-                  
-                  <div className="w-32 h-32 bg-background border-4 border-primary rounded-full overflow-hidden shrink-0 shadow-xl flex items-center justify-center relative z-10">
-                    {player.photoUrl ? (
-                      <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <UserIcon className="w-16 h-16 text-muted-foreground" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="outline" className="uppercase font-mono bg-background text-primary border-primary/30">
-                        {player.category.replace('_', ' ')}
-                      </Badge>
-                      <span className="text-muted-foreground font-mono text-sm">{player.country}</span>
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight text-foreground mb-2">
-                      {player.name}
-                    </h2>
-                    <div className="flex gap-6 mt-4">
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Base Price</div>
-                        <div className="text-xl font-mono font-bold text-foreground">{formatMoney(player.basePrice)}</div>
-                      </div>
-                      {player.battingStyle && (
-                        <div>
-                          <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Batting</div>
-                          <div className="text-sm font-medium text-foreground">{player.battingStyle}</div>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 flex-1">
+          
+          {/* Left Column: Bid History (War Room) */}
+          <div className="xl:col-span-3 flex flex-col gap-6 order-2 xl:order-1">
+             <div className="glass-panel rounded-[2rem] flex-1 flex flex-col overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                   <h3 className="font-display font-black uppercase tracking-tight text-sm flex items-center gap-2">
+                      <History className="w-4 h-4 text-primary" /> Live Feed
+                   </h3>
+                   <Badge className="bg-primary/10 text-primary border-primary/20 uppercase text-[10px] font-black">Realtime</Badge>
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-3 font-mono">
+                   <AnimatePresence initial={false}>
+                      {bids?.slice(0, 20).map((bid, i) => (
+                        <motion.div
+                          key={bid.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className={`p-3 rounded-xl border border-white/5 flex flex-col gap-1 transition-colors ${i === 0 ? "bg-primary/10 border-primary/20" : "bg-white/5"}`}
+                        >
+                          <div className="flex justify-between items-center">
+                             <span className="text-xs font-black uppercase tracking-tight text-white line-clamp-1">{bid.team.name}</span>
+                             <span className="text-[10px] opacity-40">{new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                          </div>
+                          <div className={`text-lg font-black ${i === 0 ? "text-primary" : "text-white"}`}>
+                             {formatMoney(bid.amount)}
+                          </div>
+                        </motion.div>
+                      ))}
+                      {(!bids || bids.length === 0) && (
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-30 gap-3 py-20">
+                           <TrendingUp className="w-12 h-12" />
+                           <span className="text-xs uppercase font-black tracking-widest">Waiting for Bids</span>
                         </div>
                       )}
-                    </div>
-                  </div>
+                   </AnimatePresence>
                 </div>
+             </div>
+          </div>
 
-                <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background">
-                  <div className="text-center space-y-4 w-full max-w-2xl">
-                    <div className="text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground">
-                      Current Bid
-                    </div>
-                    
-                    <div className="text-6xl md:text-8xl font-black font-mono tracking-tighter text-primary animate-in fade-in zoom-in duration-300">
-                      {formatMoney(slot.currentBid ?? slot.basePrice)}
-                    </div>
-                    
-                    {slot.highestBidTeam ? (
-                      <div className="inline-flex items-center gap-3 px-6 py-3 bg-secondary rounded-full border border-border mt-4">
-                        <div 
-                          className="w-4 h-4 rounded-full" 
-                          style={{ backgroundColor: slot.highestBidTeam.primaryColor }}
-                        />
-                        <span className="font-bold text-xl uppercase tracking-wide">
-                          {slot.highestBidTeam.name}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="inline-block px-6 py-3 bg-muted rounded-full text-muted-foreground font-bold uppercase tracking-wide mt-4">
-                        Awaiting First Bid
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {/* Center Column: The Arena (Player Card) */}
+          <div className="xl:col-span-6 order-1 xl:order-2">
+             <AnimatePresence mode="wait">
+                {slot?.player ? (
+                  <motion.div
+                    key={slot.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
+                    className="h-full flex flex-col gap-6"
+                  >
+                    <div className="relative group flex-1">
+                       <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 to-transparent blur-3xl opacity-50" />
+                       <div className="relative glass-panel rounded-[3rem] p-10 h-full flex flex-col items-center text-center overflow-hidden border-2 border-white/10 group-hover:border-primary/30 transition-colors">
+                          
+                          {/* Player Photo Placeholder / Mascot Area */}
+                          <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-gradient-to-tr from-primary/20 via-white/5 to-purple-600/20 p-2 mb-8 relative">
+                             <div className="w-full h-full rounded-full bg-card flex items-center justify-center border border-white/10 overflow-hidden">
+                                <Trophy className="w-24 h-24 text-primary/20 animate-pulse" />
+                             </div>
+                             <div className="absolute -bottom-2 right-4 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xl">
+                                {slot.player.category}
+                             </div>
+                          </div>
 
-                {user?.role === "team_owner" && (
-                  <div className="p-6 bg-card border-t border-border">
-                    <Button 
-                      size="lg" 
-                      className="w-full text-xl h-20 font-black uppercase tracking-widest gap-4 group"
-                      onClick={handleBid}
-                      disabled={!isBiddingActive || timerExpired || placeBidMutation.isPending || slot.highestBidTeamId === user.teamId}
-                    >
-                      <Gavel className="w-8 h-8 group-hover:rotate-12 transition-transform" />
-                      {timerExpired
-                        ? "Bidding Closed"
-                        : slot.highestBidTeamId === user.teamId
-                        ? "You are highest bidder"
-                        : `Place Bid (${formatMoney((slot.currentBid ?? slot.basePrice) + auction.bidIncrementMin)})`}
-                    </Button>
+                          <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-white mb-2">{slot.player.name}</h2>
+                          <div className="flex items-center gap-3 text-muted-foreground uppercase font-bold tracking-[0.3em] text-sm mb-12">
+                             <span>{slot.player.country}</span>
+                             <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                             <span>{slot.player.battingStyle}</span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-10 w-full max-w-lg mb-10">
+                             <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Base Price</div>
+                                <div className="text-2xl md:text-3xl font-display font-black text-white/60">{formatMoney(slot.basePrice)}</div>
+                             </div>
+                             <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center justify-center gap-1">
+                                   <TrendingUp className="w-3 h-3" /> Current Bid
+                                </div>
+                                <div className="text-4xl md:text-5xl font-display font-black text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]">
+                                   {formatMoney(slot.currentBid ?? slot.basePrice)}
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-10" />
+
+                          <div className="flex flex-col items-center gap-4">
+                             {slot.highestBidTeam ? (
+                               <div className="space-y-2">
+                                  <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Highest Bidder</div>
+                                  <div className="px-10 py-4 bg-primary/10 border border-primary/20 rounded-[2rem] text-2xl font-display font-black uppercase text-primary animate-neon">
+                                     {slot.highestBidTeam.name}
+                                  </div>
+                               </div>
+                             ) : (
+                               <div className="text-sm font-bold text-muted-foreground italic opacity-50 uppercase tracking-widest">
+                                  Opening Bids Invited...
+                               </div>
+                             )}
+                          </div>
+                       </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="h-full glass-panel rounded-[3rem] flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-white/5 bg-white/2">
+                    <div className="w-32 h-32 rounded-full bg-white/5 flex items-center justify-center mb-8">
+                       <Gavel className="w-16 h-16 text-muted-foreground opacity-20" />
+                    </div>
+                    <h3 className="text-3xl font-display font-black uppercase tracking-tight text-white mb-4">Arena Standby</h3>
+                    <p className="text-muted-foreground text-lg max-w-sm">The bidding floor is currently clear. The auctioneer will select the next star player shortly.</p>
                   </div>
                 )}
-              </div>
-            )}
-          </Card>
-        </div>
+             </AnimatePresence>
+          </div>
 
-        <div className="flex flex-col gap-6">
-          <Card className="flex-1 flex flex-col border-border bg-card">
-            <div className="p-4 border-b border-border font-bold uppercase tracking-wider flex items-center gap-2">
-              <History className="w-5 h-5 text-primary" />
-              Bid History
-            </div>
-            <div className="flex-1 overflow-auto p-4 space-y-3 relative">
-              {!bids?.length ? (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm uppercase tracking-wider font-bold">
-                  No bids yet
+          {/* Right Column: Player Stats / Insights */}
+          <div className="xl:col-span-3 flex flex-col gap-6 order-3">
+             <div className="glass-panel rounded-[2rem] p-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                   <h3 className="font-display font-black uppercase tracking-tight text-sm">Player Profile</h3>
+                   <div className="p-1.5 rounded-lg bg-primary/10">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                   </div>
                 </div>
-              ) : (
-                <AnimatePresence initial={false}>
-                  {bids.map((bid) => (
-                    <motion.div 
-                      key={bid.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center justify-between p-3 rounded bg-secondary/50 border border-border"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: bid.team?.primaryColor || '#ccc' }}
-                        />
-                        <span className="font-bold text-sm truncate max-w-[120px]">{bid.team?.shortName || 'Unknown'}</span>
-                      </div>
-                      <span className="font-mono font-bold text-primary">{formatMoney(bid.amount)}</span>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-            </div>
-          </Card>
-        </div>
+                
+                {slot?.player ? (
+                  <div className="space-y-8">
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1 p-3 rounded-2xl bg-white/5 border border-white/5">
+                           <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Strike Rate</div>
+                           <div className="text-lg font-display font-black text-white">142.5</div>
+                        </div>
+                        <div className="space-y-1 p-3 rounded-2xl bg-white/5 border border-white/5">
+                           <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Avg</div>
+                           <div className="text-lg font-display font-black text-white">38.2</div>
+                        </div>
+                        <div className="space-y-1 p-3 rounded-2xl bg-white/5 border border-white/5">
+                           <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">100s/50s</div>
+                           <div className="text-lg font-display font-black text-white">4 / 18</div>
+                        </div>
+                        <div className="space-y-1 p-3 rounded-2xl bg-white/5 border border-white/5">
+                           <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Matches</div>
+                           <div className="text-lg font-display font-black text-white">114</div>
+                        </div>
+                     </div>
+                     
+                     <div className="space-y-4">
+                        <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Performance Radar</div>
+                        <div className="h-32 w-full rounded-2xl bg-gradient-to-t from-primary/10 to-transparent border border-white/5 flex items-end p-4 gap-2">
+                           {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                             <motion.div 
+                                key={i}
+                                initial={{ height: 0 }}
+                                animate={{ height: `${h}%` }}
+                                className="flex-1 bg-primary/40 rounded-t-sm"
+                             />
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+                ) : (
+                  <div className="py-20 text-center space-y-4 opacity-20">
+                     <Trophy className="w-12 h-12 mx-auto" />
+                     <div className="text-[10px] font-black uppercase tracking-widest">No Active Player</div>
+                  </div>
+                )}
+             </div>
 
+             <div className="glass-panel rounded-[2rem] p-6 flex flex-col gap-4">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                   <h3 className="font-display font-black uppercase tracking-tight text-sm">League News</h3>
+                </div>
+                <div className="space-y-4">
+                   <div className="flex gap-3 items-start opacity-60 hover:opacity-100 transition-opacity cursor-default">
+                      <div className="w-2 h-2 mt-1.5 rounded-full bg-primary" />
+                      <p className="text-xs font-bold leading-relaxed line-clamp-2">MI purse status: Only ₹15Cr remaining after huge bid.</p>
+                   </div>
+                   <div className="flex gap-3 items-start opacity-60 hover:opacity-100 transition-opacity cursor-default">
+                      <div className="w-2 h-2 mt-1.5 rounded-full bg-primary" />
+                      <p className="text-xs font-bold leading-relaxed line-clamp-2">Next up in marquee list: Legendary wicket keepers.</p>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );

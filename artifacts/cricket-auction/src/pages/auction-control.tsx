@@ -12,11 +12,12 @@ import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell } from "lucide-react";
+import { Loader2, Play, Pause, Gavel, XCircle, Search, Bell, Shield, UserPlus, Info } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { clsx } from "clsx";
 
 export default function AuctionControl() {
   const { id } = useParams();
@@ -35,7 +36,7 @@ export default function AuctionControl() {
     query: { enabled: !!auctionId && (auction?.status === "active" || auction?.status === "paused"), queryKey: getGetCurrentSlotQueryKey(auctionId) }
   });
   
-  const { data: players } = useListPlayers({ status: "available", search: searchTerm });
+  const { data: players } = useListPlayers({ status: "unsold", search: searchTerm });
   
   const startMutation = useStartAuction();
   const pauseMutation = usePauseAuction();
@@ -61,165 +62,224 @@ export default function AuctionControl() {
 
   return (
     <Layout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-6rem)]">
+      <div className="max-w-[1600px] mx-auto space-y-8 h-full flex flex-col">
         
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <Card className="p-6 border-2 border-border bg-card">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">Control Console</h1>
-                <p className="text-muted-foreground">{auction.name}</p>
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+           <div className="space-y-1">
+              <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+                 <Shield className="w-3 h-3 fill-current" /> Command Center
               </div>
-              <div className="flex items-center gap-4">
-                {timerState && slot?.status === "active" && (
-                  <CountdownTimer timer={timerState} size="md" />
+              <h1 className="text-3xl font-display font-black uppercase tracking-tight text-white">{auction.name}</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground uppercase font-bold tracking-widest">
+                 <span>{auction.leagueName}</span>
+                 <span className="w-1 h-1 rounded-full bg-white/20" />
+                 <span className="text-primary">{players?.length ?? 0} Players Remaining</span>
+              </div>
+           </div>
+           
+           <div className="flex items-center gap-4">
+              <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
+                {auction.status === "draft" && (
+                  <Button 
+                    className="h-12 px-8 rounded-xl font-black uppercase tracking-wider shadow-lg shadow-primary/20"
+                    onClick={() => startMutation.mutate({ id: auctionId })}
+                    disabled={startMutation.isPending}
+                  >
+                    <Play className="w-4 h-4 mr-2 fill-current" /> Start Event
+                  </Button>
                 )}
-                <Badge variant={auction.status === "active" ? "default" : "secondary"} className="uppercase text-lg py-1 px-4">
-                  {auction.status}
-                </Badge>
+                
+                {auction.status === "active" && (
+                  <Button 
+                    variant="outline"
+                    className="h-12 px-8 rounded-xl font-black uppercase tracking-wider border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/10"
+                    onClick={() => pauseMutation.mutate({ id: auctionId })}
+                    disabled={pauseMutation.isPending}
+                  >
+                    <Pause className="w-4 h-4 mr-2 fill-current" /> Pause
+                  </Button>
+                )}
+                
+                {auction.status === "paused" && (
+                  <Button 
+                    className="h-12 px-8 rounded-xl font-black uppercase tracking-wider bg-yellow-500 text-black hover:bg-yellow-400"
+                    onClick={() => resumeMutation.mutate({ id: auctionId })}
+                    disabled={resumeMutation.isPending}
+                  >
+                    <Play className="w-4 h-4 mr-2 fill-current" /> Resume
+                  </Button>
+                )}
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-4 p-4 bg-secondary rounded-lg border border-border">
-              {auction.status === "draft" && (
-                <Button 
-                  size="lg"
-                  className="font-bold uppercase tracking-wider"
-                  onClick={() => startMutation.mutate({ id: auctionId })}
-                  disabled={startMutation.isPending}
-                >
-                  <Play className="w-4 h-4 mr-2" /> Start Auction
-                </Button>
-              )}
-              
-              {auction.status === "active" && (
-                <Button 
-                  size="lg"
-                  variant="outline"
-                  className="font-bold uppercase tracking-wider border-yellow-500 text-yellow-500 hover:bg-yellow-500/10"
-                  onClick={() => pauseMutation.mutate({ id: auctionId })}
-                  disabled={pauseMutation.isPending}
-                >
-                  <Pause className="w-4 h-4 mr-2" /> Pause Auction
-                </Button>
-              )}
-              
-              {auction.status === "paused" && (
-                <Button 
-                  size="lg"
-                  className="font-bold uppercase tracking-wider bg-yellow-500 text-black hover:bg-yellow-400"
-                  onClick={() => resumeMutation.mutate({ id: auctionId })}
-                  disabled={resumeMutation.isPending}
-                >
-                  <Play className="w-4 h-4 mr-2" /> Resume Auction
-                </Button>
-              )}
-            </div>
-            
-            {slot?.player && (
-              <div className="mt-6">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Current Slot</h3>
+              <div className="h-12 w-px bg-white/5 hidden md:block" />
 
-                {/* Timer expired — action required banner */}
-                <AnimatePresence>
-                  {timerExpired && slot.status === "active" && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.97 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      className="mb-4 flex items-center gap-3 px-5 py-4 rounded-lg border-2 border-destructive bg-destructive/10 text-destructive"
-                    >
-                      <Bell className="w-6 h-6 shrink-0 animate-bounce" />
-                      <div>
-                        <div className="font-black uppercase tracking-wider text-lg">Bidding Time Expired</div>
-                        <div className="font-medium text-sm opacity-80">
-                          {hasActiveBid
-                            ? `Sold to ${slot.highestBidTeam?.name} for ${formatMoney(slot.currentBid ?? 0)} — confirm below`
-                            : "No bids placed — mark player unsold"}
-                        </div>
+              <Badge className="h-12 px-6 rounded-2xl border-white/10 bg-white/5 text-lg font-black uppercase text-white">
+                 {auction.status}
+              </Badge>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 flex-1">
+          
+          {/* Main Control Panel */}
+          <div className="xl:col-span-8 flex flex-col gap-8">
+             <AnimatePresence mode="wait">
+                {slot?.player ? (
+                  <motion.div
+                    key={slot.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="flex flex-col gap-6"
+                  >
+                    {/* Action Alert Banner */}
+                    {timerExpired && slot.status === "active" && (
+                      <div className="flex items-center justify-between px-8 py-6 rounded-[2rem] border-2 border-destructive bg-destructive/10 text-destructive animate-pulse">
+                         <div className="flex items-center gap-4">
+                            <Bell className="w-8 h-8" />
+                            <div>
+                               <div className="text-xl font-display font-black uppercase tracking-wider">Bidding Expired</div>
+                               <div className="text-sm font-bold opacity-80 uppercase tracking-widest">Immediate action required below</div>
+                            </div>
+                         </div>
+                         <div className="text-2xl font-display font-black">
+                            {hasActiveBid ? "READY TO SELL" : "NO BIDS"}
+                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className={`p-6 border-2 rounded-lg transition-colors ${timerExpired ? "border-destructive/60 bg-destructive/5" : "border-primary/30 bg-primary/5"}`}>
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <div className="text-2xl font-bold uppercase text-foreground">{slot.player.name}</div>
-                      <div className="text-muted-foreground font-mono">{formatMoney(slot.currentBid ?? slot.basePrice)}</div>
-                    </div>
-                    {slot.highestBidTeam && (
-                      <Badge className="bg-primary text-primary-foreground font-bold text-lg">
-                        {slot.highestBidTeam.name}
-                      </Badge>
                     )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button 
-                      size="lg" 
-                      className={`font-bold uppercase tracking-wider text-white ${timerExpired && hasActiveBid ? "bg-green-500 hover:bg-green-400 ring-2 ring-green-400 ring-offset-2 ring-offset-background animate-pulse" : "bg-green-600 hover:bg-green-500"}`}
-                      disabled={!slot.highestBidTeamId || markSoldMutation.isPending}
-                      onClick={() => markSoldMutation.mutate({ id: slot.id })}
-                    >
-                      <Gavel className="w-5 h-5 mr-2" /> 
-                      {timerExpired && hasActiveBid ? "CONFIRM SOLD" : "Mark Sold"}
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="destructive"
-                      className={`font-bold uppercase tracking-wider ${timerExpired && !hasActiveBid ? "ring-2 ring-destructive ring-offset-2 ring-offset-background animate-pulse" : ""}`}
-                      disabled={markUnsoldMutation.isPending}
-                      onClick={() => markUnsoldMutation.mutate({ id: slot.id })}
-                    >
-                      <XCircle className="w-5 h-5 mr-2" /> 
-                      {timerExpired && !hasActiveBid ? "MARK UNSOLD" : "Mark Unsold"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
 
-        <div className="flex flex-col gap-6">
-          <Card className="flex-1 flex flex-col border-border bg-card overflow-hidden">
-            <div className="p-4 border-b border-border">
-              <h3 className="font-bold uppercase tracking-wider mb-4">Select Next Player</h3>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
-                <Input 
-                  placeholder="Search available players..." 
-                  className="pl-9 font-mono bg-background"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-2">
-              <div className="space-y-2">
-                {players?.map(player => (
-                  <div key={player.id} className="p-3 border border-border rounded bg-background flex justify-between items-center group hover:border-primary transition-colors">
-                    <div>
-                      <div className="font-bold text-sm uppercase text-foreground">{player.name}</div>
-                      <div className="text-xs text-muted-foreground font-mono">{formatMoney(player.basePrice)}</div>
+                    <div className={clsx(
+                      "glass-panel rounded-[3rem] p-10 border-2 transition-all duration-500",
+                      timerExpired ? "border-destructive/40 shadow-[0_0_50px_rgba(var(--destructive),0.1)]" : "border-primary/20 shadow-[0_0_50px_rgba(var(--primary),0.1)]"
+                    )}>
+                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12 pb-12 border-b border-white/5">
+                          <div className="space-y-2">
+                             <div className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Live Bidding Floor</div>
+                             <h2 className="text-4xl md:text-5xl font-display font-black uppercase tracking-tight text-white">{slot.player.name}</h2>
+                             <div className="text-muted-foreground uppercase font-bold tracking-widest text-sm">{slot.player.category} · {slot.player.country}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                             <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Live Timer</div>
+                             {timerState && <CountdownTimer timer={timerState} size="lg" />}
+                          </div>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                          <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex flex-col justify-center">
+                             <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Base Price</div>
+                             <div className="text-3xl font-display font-black text-white/50">{formatMoney(slot.basePrice)}</div>
+                          </div>
+                          <div className="p-8 rounded-[2rem] bg-primary/10 border-2 border-primary/20 flex flex-col justify-center relative overflow-hidden group">
+                             <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Gavel className="w-24 h-24 text-primary" />
+                             </div>
+                             <div className="text-[10px] font-black uppercase text-primary tracking-widest mb-2">Current Bid</div>
+                             <div className="text-5xl font-display font-black text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]">
+                                {formatMoney(slot.currentBid ?? slot.basePrice)}
+                             </div>
+                             {slot.highestBidTeam && (
+                               <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded-full text-[10px] font-black uppercase tracking-widest self-start">
+                                  <Star className="w-3 h-3 fill-current" /> {slot.highestBidTeam.name}
+                               </div>
+                             )}
+                          </div>
+                       </div>
+
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <Button 
+                            size="lg" 
+                            className={clsx(
+                              "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg shadow-2xl transition-all duration-300",
+                              timerExpired && hasActiveBid ? "bg-green-500 hover:bg-green-400 scale-[1.02] shadow-green-500/20" : "bg-white text-black hover:bg-white/90"
+                            )}
+                            disabled={!slot.highestBidTeamId || markSoldMutation.isPending}
+                            onClick={() => markSoldMutation.mutate({ id: slot.id })}
+                          >
+                            {timerExpired && hasActiveBid ? "Confirm Sale" : "Mark as Sold"}
+                          </Button>
+                          <Button 
+                            size="lg" 
+                            variant="outline"
+                            className={clsx(
+                              "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg transition-all duration-300 border-white/10",
+                              timerExpired && !hasActiveBid ? "bg-destructive text-white border-none shadow-2xl shadow-destructive/20" : "hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                            )}
+                            disabled={markUnsoldMutation.isPending}
+                            onClick={() => markUnsoldMutation.mutate({ id: slot.id })}
+                          >
+                            {timerExpired && !hasActiveBid ? "Confirm Unsold" : "Mark Unsold"}
+                          </Button>
+                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="secondary"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity uppercase text-xs font-bold"
-                      onClick={() => selectPlayerMutation.mutate({ id: auctionId, data: { playerId: player.id } })}
-                      disabled={selectPlayerMutation.isPending || !!slot?.player || auction.status !== 'active'}
-                    >
-                      Select
-                    </Button>
+                  </motion.div>
+                ) : (
+                  <div className="glass-panel rounded-[3rem] flex flex-col items-center justify-center text-center p-20 border-2 border-dashed border-white/5 flex-1 min-h-[500px]">
+                     <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-8">
+                        <UserPlus className="w-10 h-10 text-primary opacity-50" />
+                     </div>
+                     <h3 className="text-3xl font-display font-black uppercase tracking-tight text-white mb-4">Awaiting Selection</h3>
+                     <p className="text-muted-foreground text-lg max-w-sm">The floor is clear. Select a player from the registry on the right to initiate the next bidding sequence.</p>
+                     <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5">
+                        <Info className="w-4 h-4 text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">Auction Status: {auction.status}</span>
+                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </div>
+                )}
+             </AnimatePresence>
+          </div>
 
+          {/* Player Selection Sidebar */}
+          <div className="xl:col-span-4 flex flex-col gap-6">
+             <div className="glass-panel rounded-[2rem] flex-1 flex flex-col overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-white/5">
+                   <h3 className="font-display font-black uppercase tracking-tight text-sm mb-4">Player Registry</h3>
+                   <div className="relative">
+                      <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input 
+                        placeholder="Filter by name, country, role..." 
+                        className="h-12 pl-11 pr-4 rounded-xl font-bold bg-white/5 border-white/10 focus:border-primary transition-all text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                   </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 space-y-3">
+                   {players?.map(player => (
+                     <motion.div 
+                       key={player.id} 
+                       initial={{ opacity: 0 }} 
+                       animate={{ opacity: 1 }}
+                       className="group p-4 rounded-[1.5rem] bg-white/2 border border-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 flex justify-between items-center"
+                     >
+                        <div className="space-y-1">
+                           <div className="text-sm font-black uppercase tracking-tight text-white">{player.name}</div>
+                           <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{player.category} · {player.country}</div>
+                           <div className="text-xs font-display font-black text-primary/70">{formatMoney(player.basePrice)}</div>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          className="h-10 px-4 rounded-xl font-black uppercase text-[10px] tracking-widest opacity-0 group-hover:opacity-100 transition-all shadow-xl shadow-primary/20"
+                          onClick={() => selectPlayerMutation.mutate({ id: auctionId, data: { playerId: player.id } })}
+                          disabled={selectPlayerMutation.isPending || !!slot?.player || auction.status !== 'active'}
+                        >
+                          Select
+                        </Button>
+                     </motion.div>
+                   ))}
+                   {(!players || players.length === 0) && (
+                     <div className="py-12 text-center text-muted-foreground opacity-30 italic text-sm">
+                        No available players found
+                     </div>
+                   )}
+                </div>
+                <div className="p-4 bg-white/5 border-t border-white/5 text-center">
+                   <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Total Registry: {players?.length ?? 0} Players</div>
+                </div>
+             </div>
+          </div>
+
+        </div>
       </div>
     </Layout>
   );
