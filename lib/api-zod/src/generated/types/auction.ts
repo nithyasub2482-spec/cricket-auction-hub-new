@@ -5,6 +5,7 @@
  * Cricket League Auction & Bidding Platform API
  * OpenAPI spec version: 1.0.0
  */
+import type { AuctionBiddingMode } from "./auctionBiddingMode";
 import type { AuctionStatus } from "./auctionStatus";
 
 export interface Auction {
@@ -22,5 +23,6 @@ export interface Auction {
   startedAt?: string | null;
   /** @nullable */
   completedAt?: string | null;
+  biddingMode: AuctionBiddingMode;
   createdAt: string;
 }

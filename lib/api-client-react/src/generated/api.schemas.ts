@@ -283,6 +283,14 @@ export const AuctionStatus = {
   completed: "completed",
 } as const;
 
+export type AuctionBiddingMode =
+  (typeof AuctionBiddingMode)[keyof typeof AuctionBiddingMode];
+
+export const AuctionBiddingMode = {
+  auctioneer: "auctioneer",
+  team: "team",
+} as const;
+
 export interface Auction {
   id: number;
   name: string;
@@ -298,14 +306,24 @@ export interface Auction {
   startedAt?: string | null;
   /** @nullable */
   completedAt?: string | null;
+  biddingMode: AuctionBiddingMode;
   createdAt: string;
 }
+
+export type AuctionInputBiddingMode =
+  (typeof AuctionInputBiddingMode)[keyof typeof AuctionInputBiddingMode];
+
+export const AuctionInputBiddingMode = {
+  auctioneer: "auctioneer",
+  team: "team",
+} as const;
 
 export interface AuctionInput {
   name: string;
   leagueName: string;
   bidIncrementMin: number;
   timerSeconds: number;
+  biddingMode?: AuctionInputBiddingMode;
 }
 
 export type AuctionSlotStatus =

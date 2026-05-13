@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export interface LiveActivity {
   auctionId: number;
+  slotId: number;
   playerName: string;
   playerCategory: string;
   basePrice: number;
@@ -102,6 +103,7 @@ export function useMyTeamSocket(teamId: number | null | undefined) {
       const playerCat = payload.player?.category ?? slot.player?.category ?? "—";
       setLiveActivity({
         auctionId: slot.auctionId,
+        slotId: slot.id,
         playerName,
         playerCategory: playerCat,
         basePrice: slot.basePrice,

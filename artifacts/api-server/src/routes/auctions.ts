@@ -33,6 +33,7 @@ function formatAuction(a: typeof auctionsTable.$inferSelect) {
     currentSlotId: a.currentSlotId,
     bidIncrementMin: Number(a.bidIncrementMin),
     timerSeconds: a.timerSeconds,
+    biddingMode: a.biddingMode,
     startedAt: a.startedAt?.toISOString() ?? null,
     completedAt: a.completedAt?.toISOString() ?? null,
     createdAt: a.createdAt.toISOString(),

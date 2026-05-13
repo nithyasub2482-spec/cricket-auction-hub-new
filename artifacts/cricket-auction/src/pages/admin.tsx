@@ -28,7 +28,7 @@ export default function Admin() {
 
   const { data: auctions } = useListAuctions();
   const createAuction = useCreateAuction();
-  const [auctionForm, setAuctionForm] = useState({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000 });
+  const [auctionForm, setAuctionForm] = useState({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" as "auctioneer" | "team" });
 
   const { data: players } = useListPlayers({});
   const createPlayer = useCreatePlayer();
@@ -121,8 +121,8 @@ export default function Admin() {
                         onSubmit={(e) => {
                           e.preventDefault();
                           createAuction.mutate(
-                            { data: { name: auctionForm.name, leagueName: auctionForm.leagueName, timerSeconds: auctionForm.timerSeconds, bidIncrementMin: auctionForm.bidIncrementMin } },
-                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000 }); } }
+                            { data: { name: auctionForm.name, leagueName: auctionForm.leagueName, timerSeconds: auctionForm.timerSeconds, bidIncrementMin: auctionForm.bidIncrementMin, biddingMode: auctionForm.biddingMode } },
+                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" }); } }
                           );
                         }}
                         className="space-y-5"
@@ -145,6 +145,17 @@ export default function Admin() {
                             <Input className="h-12 bg-white/5 border-white/5 rounded-xl font-bold" type="number" min={10000} value={auctionForm.bidIncrementMin} onChange={(ev) => setAuctionForm((prev) => ({ ...prev, bidIncrementMin: parseInt(ev.target.value) }))} />
                           </div>
                         </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">Bidding Mode</Label>
+                          <select
+                            className="w-full h-12 px-4 rounded-xl border border-white/5 bg-white/5 text-white text-sm font-bold appearance-none outline-none focus:border-primary"
+                            value={auctionForm.biddingMode}
+                            onChange={(ev) => setAuctionForm((prev) => ({ ...prev, biddingMode: ev.target.value as "auctioneer" | "team" }))}
+                          >
+                            <option value="auctioneer">Auctioneer Controlled (Manual Entry)</option>
+                            <option value="team">Team Controlled (Self-Service)</option>
+                          </select>
+                        </div>
                         <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20" disabled={createAuction.isPending}>
                           Deploy Auction
                         </Button>
@@ -166,7 +177,7 @@ export default function Admin() {
                         <div className="flex items-center gap-6">
                            <div className="hidden md:block text-right">
                               <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuration</div>
-                              <div className="text-xs font-bold text-white/60">{auctionItem.timerSeconds}s · ₹{(auctionItem.bidIncrementMin/1000).toFixed(0)}k Incr</div>
+                              <div className="text-xs font-bold text-white/60">{auctionItem.timerSeconds}s · ₹{(auctionItem.bidIncrementMin/1000).toFixed(0)}k Incr · {auctionItem.biddingMode === "auctioneer" ? "Auctioneer" : "Team"}</div>
                            </div>
                            <Badge className={cn(
                              "uppercase font-black tracking-widest px-4 py-2 rounded-full text-[10px]",

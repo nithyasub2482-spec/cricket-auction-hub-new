@@ -5,7 +5,7 @@ import {
   useGetAuction, getGetAuctionQueryKey, 
   useGetCurrentSlot, getGetCurrentSlotQueryKey,
   useSelectNextPlayer, useStartAuction, usePauseAuction, useResumeAuction,
-  useMarkPlayerSold, useMarkPlayerUnsold, useListPlayers
+  useMarkPlayerSold, useMarkPlayerUnsold, useListPlayers, useListTeams, usePlaceBid
 } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
 import { useBidSounds } from "@/hooks/useBidSounds";
@@ -35,6 +35,9 @@ export default function AuctionControl() {
   });
   
   const { data: players } = useListPlayers({ status: "unsold", search: searchTerm });
+  const { data: teams } = useListTeams();
+  
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   
   const startMutation = useStartAuction();
   const pauseMutation = usePauseAuction();
@@ -42,9 +45,11 @@ export default function AuctionControl() {
   const selectPlayerMutation = useSelectNextPlayer();
   const markSoldMutation = useMarkPlayerSold();
   const markUnsoldMutation = useMarkPlayerUnsold();
+  const placeBidMutation = usePlaceBid();
 
   const timerExpired = timerState?.expired ?? false;
   const hasActiveBid = !!slot?.highestBidTeamId;
+  const nextBidAmount = slot ? (slot.currentBid ? slot.currentBid + auction!.bidIncrementMin : slot.basePrice) : 0;
 
   if (auctionLoading) {
     return (
@@ -176,13 +181,50 @@ export default function AuctionControl() {
                              <div className="text-5xl font-display font-black text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]">
                                 {formatMoney(slot.currentBid ?? slot.basePrice)}
                              </div>
-                             {slot.highestBidTeam && (
+                              {slot.highestBidTeam && (
                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded-full text-[10px] font-black uppercase tracking-widest self-start">
                                   <Star className="w-3 h-3 fill-current" /> {slot.highestBidTeam.name}
                                </div>
                              )}
                           </div>
                        </div>
+
+                       {auction.biddingMode === "auctioneer" && slot.status === "active" && !timerExpired && (
+                         <div className="p-8 rounded-[2rem] bg-white/5 border border-white/10 mb-12 flex flex-col md:flex-row items-end gap-6">
+                           <div className="flex-1 w-full space-y-2">
+                             <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Select Team</div>
+                             <select
+                               className="w-full h-14 px-4 rounded-xl border border-white/10 bg-black/50 text-white font-bold appearance-none outline-none focus:border-primary focus:bg-white/5 transition-all"
+                               value={selectedTeamId}
+                               onChange={(e) => setSelectedTeamId(e.target.value)}
+                             >
+                               <option value="" disabled>Choose a franchise...</option>
+                               {teams?.map(t => (
+                                 <option key={t.id} value={t.id}>{t.name} (Max Bid: {formatMoney(t.remainingPurse)})</option>
+                               ))}
+                             </select>
+                           </div>
+                           <Button 
+                             size="lg" 
+                             className="h-14 px-8 rounded-xl font-black uppercase tracking-widest text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto"
+                             disabled={!selectedTeamId || placeBidMutation.isPending}
+                             onClick={() => {
+                               if (selectedTeamId) {
+                                 placeBidMutation.mutate({
+                                   id: auctionId,
+                                   data: { slotId: slot.id, teamId: parseInt(selectedTeamId), amount: nextBidAmount }
+                                 }, {
+                                   onSuccess: () => {
+                                     setSelectedTeamId("");
+                                   }
+                                 });
+                               }
+                             }}
+                           >
+                             Place Bid: {formatMoney(nextBidAmount)}
+                           </Button>
+                         </div>
+                       )}
 
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <Button 

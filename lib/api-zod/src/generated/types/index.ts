@@ -7,7 +7,9 @@
  */
 
 export * from "./auction";
+export * from "./auctionBiddingMode";
 export * from "./auctionInput";
+export * from "./auctionInputBiddingMode";
 export * from "./auctionSlot";
 export * from "./auctionSlotStatus";
 export * from "./auctionStatus";

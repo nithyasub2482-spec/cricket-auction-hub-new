@@ -5,6 +5,7 @@ import {
   useGetTeamSquad, getGetTeamSquadQueryKey,
   useGetTeam, getGetTeamQueryKey,
   useListPlayers, getListPlayersQueryKey,
+  usePlaceBid, useGetAuction,
 } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -118,6 +119,15 @@ export default function MyTeam() {
     }
   );
 
+  const { data: auction } = useGetAuction(liveActivity?.auctionId ?? 0, {
+    query: { 
+      enabled: !!liveActivity?.auctionId,
+      queryKey: ["getAuction", liveActivity?.auctionId] 
+    },
+  });
+
+  const placeBidMutation = usePlaceBid();
+
   const isLoading = tLoading || sLoading || pLoading;
 
   // ── No team ───────────────────────────────────────────────────────────────
@@ -170,6 +180,10 @@ export default function MyTeam() {
   const remaining = stats?.remaining ?? team.remainingPurse;
   const spent = stats?.spent ?? (team.purse - team.remainingPurse);
   const pctRemaining = team.purse > 0 ? Math.round((remaining / team.purse) * 100) : 0;
+
+  const nextBidAmount = liveActivity 
+    ? (liveActivity.bidCount > 0 ? liveActivity.currentBid + (auction?.bidIncrementMin ?? 100000) : liveActivity.basePrice) 
+    : 0;
 
   const currentCounts = {
     batsman:      stats?.batsmen ?? 0,
@@ -316,6 +330,29 @@ export default function MyTeam() {
                     )}
                   </div>
                 </div>
+                {auction?.biddingMode === "team" && (
+                  <div className="bg-black/20 border-t border-border p-4 flex justify-between items-center">
+                    <div className="text-sm font-bold text-muted-foreground">
+                      Next Bid: <span className="text-foreground">{formatMoney(nextBidAmount)}</span>
+                    </div>
+                    <Button
+                      className="gap-2 uppercase font-black tracking-widest shadow-lg"
+                      disabled={liveActivity.isMyTeamLeading || nextBidAmount > remaining || placeBidMutation.isPending}
+                      onClick={() => {
+                        placeBidMutation.mutate({
+                          id: liveActivity.auctionId,
+                          data: {
+                            slotId: liveActivity.slotId,
+                            teamId: team.id,
+                            amount: nextBidAmount,
+                          }
+                        });
+                      }}
+                    >
+                      Place Bid <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </Card>
             </motion.div>
           )}

@@ -1036,7 +1036,7 @@ components:
     # AUCTIONS
     Auction:
       type: object
-      required: [id, name, leagueName, status, bidIncrementMin, timerSeconds, createdAt]
+      required: [id, name, leagueName, status, bidIncrementMin, timerSeconds, biddingMode, createdAt]
       properties:
         id:
           type: integer
@@ -1059,6 +1059,9 @@ components:
           type: ["string", "null"]
         completedAt:
           type: ["string", "null"]
+        biddingMode:
+          type: string
+          enum: [auctioneer, team]
         createdAt:
           type: string
 
@@ -1074,6 +1077,9 @@ components:
           type: number
         timerSeconds:
           type: integer
+        biddingMode:
+          type: string
+          enum: [auctioneer, team]
 
     AuctionSlot:
       type: object

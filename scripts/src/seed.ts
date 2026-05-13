@@ -1,4 +1,4 @@
-import { db, usersTable, teamsTable, playersTable } from "../../lib/db/src/index";
+import { db, usersTable, teamsTable, playersTable } from "@workspace/db";
 import crypto from "crypto";
 
 function hashPassword(password: string): string {
@@ -20,11 +20,11 @@ async function seed() {
   // 2. Create Players
   console.log("Creating players...");
   await db.insert(playersTable).values([
-    { name: "Virat Kohli", country: "India", category: "batsman", basePrice: 2000000, battingStyle: "Right-hand bat", status: "unsold" },
-    { name: "MS Dhoni", country: "India", category: "wicket_keeper", basePrice: 2000000, battingStyle: "Right-hand bat", status: "unsold" },
-    { name: "Jasprit Bumrah", country: "India", category: "bowler", basePrice: 1500000, bowlingStyle: "Right-arm fast", status: "unsold" },
-    { name: "Rashid Khan", country: "Afghanistan", category: "bowler", basePrice: 1500000, bowlingStyle: "Right-arm legbreak", status: "unsold" },
-    { name: "Glenn Maxwell", country: "Australia", category: "all_rounder", basePrice: 1000000, battingStyle: "Right-hand bat", status: "unsold" }
+    { name: "Virat Kohli", country: "India", category: "batsman", basePrice: "2000000", battingStyle: "Right-hand bat", status: "unsold" },
+    { name: "MS Dhoni", country: "India", category: "wicket_keeper", basePrice: "2000000", battingStyle: "Right-hand bat", status: "unsold" },
+    { name: "Jasprit Bumrah", country: "India", category: "bowler", basePrice: "1500000", bowlingStyle: "Right-arm fast", status: "unsold" },
+    { name: "Rashid Khan", country: "Afghanistan", category: "bowler", basePrice: "1500000", bowlingStyle: "Right-arm legbreak", status: "unsold" },
+    { name: "Glenn Maxwell", country: "Australia", category: "all_rounder", basePrice: "1000000", battingStyle: "Right-hand bat", status: "unsold" }
   ]);
 
   // 3. Create Users

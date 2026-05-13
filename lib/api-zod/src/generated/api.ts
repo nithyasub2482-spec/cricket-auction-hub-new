@@ -419,6 +419,7 @@ export const ListAuctionsResponseItem = zod.object({
   timerSeconds: zod.number(),
   startedAt: zod.string().nullish(),
   completedAt: zod.string().nullish(),
+  biddingMode: zod.enum(["auctioneer", "team"]),
   createdAt: zod.string(),
 });
 export const ListAuctionsResponse = zod.array(ListAuctionsResponseItem);
@@ -431,6 +432,7 @@ export const CreateAuctionBody = zod.object({
   leagueName: zod.string(),
   bidIncrementMin: zod.number(),
   timerSeconds: zod.number(),
+  biddingMode: zod.enum(["auctioneer", "team"]).optional(),
 });
 
 /**
@@ -451,6 +453,7 @@ export const GetAuctionResponse = zod.object({
   timerSeconds: zod.number(),
   startedAt: zod.string().nullish(),
   completedAt: zod.string().nullish(),
+  biddingMode: zod.enum(["auctioneer", "team"]),
   createdAt: zod.string(),
 });
 
@@ -472,6 +475,7 @@ export const StartAuctionResponse = zod.object({
   timerSeconds: zod.number(),
   startedAt: zod.string().nullish(),
   completedAt: zod.string().nullish(),
+  biddingMode: zod.enum(["auctioneer", "team"]),
   createdAt: zod.string(),
 });
 
@@ -493,6 +497,7 @@ export const PauseAuctionResponse = zod.object({
   timerSeconds: zod.number(),
   startedAt: zod.string().nullish(),
   completedAt: zod.string().nullish(),
+  biddingMode: zod.enum(["auctioneer", "team"]),
   createdAt: zod.string(),
 });
 
@@ -514,6 +519,7 @@ export const ResumeAuctionResponse = zod.object({
   timerSeconds: zod.number(),
   startedAt: zod.string().nullish(),
   completedAt: zod.string().nullish(),
+  biddingMode: zod.enum(["auctioneer", "team"]),
   createdAt: zod.string(),
 });
 

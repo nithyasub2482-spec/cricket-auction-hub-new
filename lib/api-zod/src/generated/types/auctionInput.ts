@@ -5,10 +5,12 @@
  * Cricket League Auction & Bidding Platform API
  * OpenAPI spec version: 1.0.0
  */
+import type { AuctionInputBiddingMode } from "./auctionInputBiddingMode";
 
 export interface AuctionInput {
   name: string;
   leagueName: string;
   bidIncrementMin: number;
   timerSeconds: number;
+  biddingMode?: AuctionInputBiddingMode;
 }

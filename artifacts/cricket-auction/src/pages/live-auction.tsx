@@ -102,7 +102,7 @@ export default function LiveAuction() {
                           )}
                         >
                           <div className="flex justify-between items-center">
-                             <span className="text-xs font-black uppercase tracking-tight text-white line-clamp-1">{bid.team.name}</span>
+                             <span className="text-xs font-black uppercase tracking-tight text-white line-clamp-1">{bid.team?.name ?? 'Unknown Team'}</span>
                              <span className="text-[10px] opacity-40">{new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                           </div>
                           <div className={cn("text-lg font-black", bidIndex === 0 ? "text-primary" : "text-white")}>

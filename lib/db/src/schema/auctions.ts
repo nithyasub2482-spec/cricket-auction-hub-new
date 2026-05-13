@@ -15,6 +15,11 @@ export const auctionsTable = pgTable("auctions", {
   currentSlotId: integer("current_slot_id"),
   bidIncrementMin: numeric("bid_increment_min", { precision: 15, scale: 2 }).notNull().default("100000"),
   timerSeconds: integer("timer_seconds").notNull().default(30),
+  biddingMode: text("bidding_mode", {
+    enum: ["auctioneer", "team"],
+  })
+    .notNull()
+    .default("auctioneer"),
   startedAt: timestamp("started_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
