@@ -326,6 +326,14 @@ export interface AuctionInput {
   biddingMode?: AuctionInputBiddingMode;
 }
 
+export interface DeleteAuctionResponse {
+  success: boolean;
+  message: string;
+  deletedAuctionId: number;
+  restoredPlayers: number;
+  refundedTeams: number;
+}
+
 export type AuctionSlotStatus =
   (typeof AuctionSlotStatus)[keyof typeof AuctionSlotStatus];
 

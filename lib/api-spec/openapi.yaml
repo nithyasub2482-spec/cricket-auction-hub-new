@@ -356,6 +356,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Auction"
+    delete:
+      operationId: deleteAuction
+      tags: [auctions]
+      summary: Delete auction
+      description: Delete an auction and restore all players to available status. Team purses are refunded for sold players.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Auction deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAuctionResponse"
+        "404":
+          description: Auction not found
+        "500":
+          description: Server error
 
   /auctions/{id}/start:
     post:
@@ -1080,6 +1102,21 @@ components:
         biddingMode:
           type: string
           enum: [auctioneer, team]
+
+    DeleteAuctionResponse:
+      type: object
+      required: [success, message, deletedAuctionId, restoredPlayers, refundedTeams]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        deletedAuctionId:
+          type: integer
+        restoredPlayers:
+          type: integer
+        refundedTeams:
+          type: integer
 
     AuctionSlot:
       type: object

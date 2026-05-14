@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout";
 import {
   useListAuctions,
   useCreateAuction,
+  useDeleteAuction,
   useListPlayers,
   useCreatePlayer,
   useListTeams,
@@ -13,8 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import { Plus, Trophy, Users, ShieldCheck, Gavel, UserPlus, Shield, ChevronRight } from "lucide-react";
+import { Plus, Trophy, Users, ShieldCheck, Gavel, UserPlus, Shield, ChevronRight, Trash2 } from "lucide-react";
 import { formatMoney, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,9 +35,11 @@ export default function Admin() {
   const { user: currentUser } = useAuth();
   const [tab, setTab] = useState<Tab>("auctions");
   const { toast } = useToast();
+  const [auctionToDelete, setAuctionToDelete] = useState<number | null>(null);
 
-  const { data: auctions } = useListAuctions();
+  const { data: auctions, refetch: refetchAuctions } = useListAuctions();
   const createAuction = useCreateAuction();
+  const deleteAuction = useDeleteAuction();
   const [auctionForm, setAuctionForm] = useState({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" as "auctioneer" | "team" });
 
   const { data: players } = useListPlayers({});
@@ -165,7 +177,7 @@ export default function Admin() {
                   <div className="lg:col-span-8 space-y-4">
                     {auctions?.map((auctionItem) => (
                       <div key={auctionItem.id} className="group p-6 glass-panel rounded-[2rem] flex items-center justify-between hover:border-primary/20 transition-all">
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-6 flex-1">
                            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-primary/40 group-hover:text-primary transition-colors">
                               <Gavel className="w-6 h-6" />
                            </div>
@@ -174,7 +186,7 @@ export default function Admin() {
                               <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">{auctionItem.leagueName}</div>
                            </div>
                         </div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4">
                            <div className="hidden md:block text-right">
                               <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Configuration</div>
                               <div className="text-xs font-bold text-white/60">{auctionItem.timerSeconds}s · ₹{(auctionItem.bidIncrementMin/1000).toFixed(0)}k Incr · {auctionItem.biddingMode === "auctioneer" ? "Auctioneer" : "Team"}</div>
@@ -185,6 +197,16 @@ export default function Admin() {
                            )}>
                              {auctionItem.status}
                            </Badge>
+                           <Button
+                             variant="destructive"
+                             size="sm"
+                             className="rounded-lg font-black uppercase tracking-widest text-[10px] h-10 px-3"
+                             onClick={() => setAuctionToDelete(auctionItem.id)}
+                             disabled={deleteAuction.isPending}
+                           >
+                             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                             Delete
+                           </Button>
                         </div>
                       </div>
                     ))}
@@ -392,6 +414,52 @@ export default function Admin() {
               )}
            </motion.div>
         </AnimatePresence>
+
+        <AlertDialog open={auctionToDelete !== null} onOpenChange={(open) => !open && setAuctionToDelete(null)}>
+          <AlertDialogContent className="glass-panel border-white/10 max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white font-display font-black uppercase tracking-tight">Delete Auction?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                This will permanently delete the auction and restore all players to available status. Team purses will be refunded for any sold players. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="bg-white/5 border border-destructive/20 rounded-lg p-4 text-sm text-destructive/80 font-bold">
+              ⚠️ All players will be marked as available and team purses will be refunded.
+            </div>
+            <div className="flex gap-3 justify-end">
+              <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive/90 text-destructive-foreground hover:bg-destructive font-black uppercase tracking-widest"
+                onClick={() => {
+                  if (auctionToDelete) {
+                    deleteAuction.mutate(
+                      { id: auctionToDelete },
+                      {
+                        onSuccess: (data) => {
+                          toast({
+                            title: "Auction Deleted",
+                            description: `${data.message}. Restored ${data.restoredPlayers} players and refunded ${data.refundedTeams} teams.`,
+                          });
+                          setAuctionToDelete(null);
+                          refetchAuctions();
+                        },
+                        onError: (error: any) => {
+                          toast({
+                            title: "Error",
+                            description: error?.message || "Failed to delete auction",
+                            variant: "destructive",
+                          });
+                        },
+                      }
+                    );
+                  }
+                }}
+              >
+                Delete Auction
+              </AlertDialogAction>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

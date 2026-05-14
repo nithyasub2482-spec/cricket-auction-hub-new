@@ -1769,6 +1769,89 @@ export const useResumeAuction = <
 };
 
 /**
+ * @summary Delete auction
+ */
+export const getDeleteAuctionUrl = (id: number) => {
+  return `/api/auctions/${id}`;
+};
+
+export const deleteAuction = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteAuctionResponse> => {
+  return customFetch<DeleteAuctionResponse>(getDeleteAuctionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAuctionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAuction>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAuction>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteAuction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAuction>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteAuction(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAuctionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAuction>>
+>;
+export type DeleteAuctionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete auction
+ */
+export const useDeleteAuction = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAuction>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAuction>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteAuctionMutationOptions(options));
+};
+
+/**
  * @summary Select next player for bidding
  */
 export const getSelectNextPlayerUrl = (id: number) => {
