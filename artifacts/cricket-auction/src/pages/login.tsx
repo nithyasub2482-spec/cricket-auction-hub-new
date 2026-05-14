@@ -82,7 +82,6 @@ export default function Login() {
           <p className="font-bold text-muted-foreground uppercase tracking-wider mb-2">Demo Accounts</p>
           <p>admin@cricket.com / admin123</p>
           <p>auctioneer@cricket.com / auction123</p>
-          <p>mumbai@cricket.com / team123</p>
         </div>
       </div>
     </div>
