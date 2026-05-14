@@ -85,7 +85,7 @@ export function useMyTeamSocket(teamId: number | null | undefined) {
   }, [teamId, queryClient]);
 
   useEffect(() => {
-    const socket = io("/api", {
+    const socket = io(import.meta.env.VITE_API_URL || "/api", {
       transports: ["websocket", "polling"],
       reconnection: true,
       path: "/api/socket.io",
@@ -173,6 +173,43 @@ export function useMyTeamSocket(teamId: number | null | undefined) {
       socket.disconnect();
     };
   }, [teamId, invalidateTeam, queryClient]);
+
+  // Fetch initial live activity in case we load mid-auction
+  useEffect(() => {
+    const fetchInitialActivity = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${apiUrl}/api/auctions`);
+        if (!res.ok) return;
+        const auctions = await res.json();
+        const activeAuction = auctions.find((a: any) => a.status === "active" && a.currentSlotId);
+        if (activeAuction) {
+          const slotRes = await fetch(`${apiUrl}/api/auctions/${activeAuction.id}/current-slot`);
+          if (slotRes.ok) {
+            const slot = await slotRes.json();
+            if (slot && slot.status === "active") {
+              setLiveActivity({
+                auctionId: slot.auctionId,
+                slotId: slot.id,
+                playerName: slot.player?.name ?? "Unknown Player",
+                playerCategory: slot.player?.category ?? "—",
+                basePrice: slot.basePrice,
+                currentBid: slot.currentBid ?? slot.basePrice,
+                bidCount: slot.bidCount ?? 0,
+                leadingTeamId: slot.highestBidTeamId,
+                leadingTeamName: slot.highestBidTeam?.name ?? slot.highestBidTeam?.shortName ?? null,
+                leadingTeamColor: slot.highestBidTeam?.primaryColor ?? null,
+                isMyTeamLeading: !!teamId && slot.highestBidTeamId === teamId,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial activity:", err);
+      }
+    };
+    fetchInitialActivity();
+  }, [teamId]);
 
   return { connected, liveActivity };
 }

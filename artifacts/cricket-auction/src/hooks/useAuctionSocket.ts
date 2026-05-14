@@ -22,7 +22,7 @@ export function useAuctionSocket(auctionId?: number) {
   }, []);
 
   useEffect(() => {
-    const socket = io("/api", {
+    const socket = io(import.meta.env.VITE_API_URL || "/api", {
       transports: ["websocket", "polling"],
       reconnection: true,
       path: "/api/socket.io",
