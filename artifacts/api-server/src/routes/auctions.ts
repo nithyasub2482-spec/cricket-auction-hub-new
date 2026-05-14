@@ -7,6 +7,7 @@ import {
   StartAuctionParams,
   PauseAuctionParams,
   ResumeAuctionParams,
+  DeleteAuctionParams,
   SelectNextPlayerParams,
   SelectNextPlayerBody,
   MarkPlayerSoldParams,
@@ -220,6 +221,105 @@ router.post("/auctions/:id/resume", requireAuth, async (req, res): Promise<void>
   resumeTimer(auction.id);
   emitToAuction(auction.id, "auction:resumed", formatted);
   res.json(formatted);
+});
+
+// Delete auction (restore players and refund team purses)
+router.delete("/auctions/:id", requireAuth, async (req, res): Promise<void> => {
+  const params = DeleteAuctionParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const auctionId = params.data.id;
+
+  try {
+    // Get the auction
+    const [auction] = await db
+      .select()
+      .from(auctionsTable)
+      .where(eq(auctionsTable.id, auctionId));
+
+    if (!auction) {
+      res.status(404).json({ error: "Auction not found" });
+      return;
+    }
+
+    // Get all slots for this auction
+    const slots = await db
+      .select()
+      .from(auctionSlotsTable)
+      .where(eq(auctionSlotsTable.auctionId, auctionId));
+
+    // Track refunded teams and restored players
+    const refundedTeamsMap = new Map<number, number>(); // teamId -> totalRefund
+    const playersToRestore = new Set<number>();
+
+    // Process each slot
+    for (const slot of slots) {
+      // Collect players to restore
+      playersToRestore.add(slot.playerId);
+
+      // If the slot was sold, refund the team
+      if (slot.status === "sold" && slot.soldToTeamId && slot.soldPrice) {
+        const currentRefund = refundedTeamsMap.get(slot.soldToTeamId) || 0;
+        refundedTeamsMap.set(slot.soldToTeamId, currentRefund + Number(slot.soldPrice));
+      }
+    }
+
+    // Update team purses - refund all money spent on players in this auction
+    for (const [teamId, refundAmount] of refundedTeamsMap.entries()) {
+      const [team] = await db
+        .select()
+        .from(teamsTable)
+        .where(eq(teamsTable.id, teamId));
+
+      if (team) {
+        const newPurse = Number(team.remainingPurse) + refundAmount;
+        await db
+          .update(teamsTable)
+          .set({ remainingPurse: String(newPurse) })
+          .where(eq(teamsTable.id, teamId));
+      }
+    }
+
+    // Update all players in this auction back to 'available'
+    for (const playerId of playersToRestore) {
+      await db
+        .update(playersTable)
+        .set({ status: "available" })
+        .where(eq(playersTable.id, playerId));
+    }
+
+    // Delete all bids for this auction
+    await db.delete(bidsTable).where(eq(bidsTable.auctionId, auctionId));
+
+    // Delete all slots for this auction
+    await db.delete(auctionSlotsTable).where(eq(auctionSlotsTable.auctionId, auctionId));
+
+    // Delete the auction
+    await db.delete(auctionsTable).where(eq(auctionsTable.id, auctionId));
+
+    // Stop any active timers
+    stopTimer(auctionId);
+
+    // Emit deletion event
+    emitToAuction(auctionId, "auction:deleted", {
+      auctionId,
+      message: "Auction has been deleted. All players have been restored and team purses have been refunded.",
+    });
+
+    res.json({
+      success: true,
+      message: `Auction deleted successfully. Restored ${playersToRestore.size} players and refunded ${refundedTeamsMap.size} teams.`,
+      deletedAuctionId: auctionId,
+      restoredPlayers: playersToRestore.size,
+      refundedTeams: refundedTeamsMap.size,
+    });
+  } catch (error) {
+    console.error("Error deleting auction:", error);
+    res.status(500).json({ error: "Failed to delete auction" });
+  }
 });
 
 // Select next player

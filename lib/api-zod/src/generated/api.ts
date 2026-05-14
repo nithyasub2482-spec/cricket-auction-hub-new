@@ -524,6 +524,21 @@ export const ResumeAuctionResponse = zod.object({
 });
 
 /**
+ * @summary Delete auction
+ */
+export const DeleteAuctionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteAuctionResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+  deletedAuctionId: zod.number(),
+  restoredPlayers: zod.number(),
+  refundedTeams: zod.number(),
+});
+
+/**
  * @summary Select next player for bidding
  */
 export const SelectNextPlayerParams = zod.object({
