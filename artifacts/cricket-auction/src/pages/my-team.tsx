@@ -107,11 +107,13 @@ export default function MyTeam() {
 
   const { data: activeSlot } = useGetCurrentSlot(activeAuctionId, {
     query: {
-      enabled: !!activeAuctionId && !socketLiveActivity,
-      queryKey: getGetCurrentSlotQueryKey(activeAuctionId)
+      enabled: !!activeAuctionId,
+      queryKey: getGetCurrentSlotQueryKey(activeAuctionId),
+      refetchInterval: socketLiveActivity ? false : 2000, // Poll every 2s if no WebSocket data
     }
   });
 
+  // Prioritize socket data, fall back to API data, ensure we always have active slot info
   const liveActivity = socketLiveActivity || (activeSlot && activeSlot.status === 'active' ? {
       auctionId: activeSlot.auctionId,
       slotId: activeSlot.id,
