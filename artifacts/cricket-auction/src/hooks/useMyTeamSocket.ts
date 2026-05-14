@@ -85,7 +85,7 @@ export function useMyTeamSocket(teamId: number | null | undefined) {
   }, [teamId, queryClient]);
 
   useEffect(() => {
-    const socket = io("/api", {
+    const socket = io(import.meta.env.VITE_API_URL || "/api", {
       transports: ["websocket", "polling"],
       reconnection: true,
       path: "/api/socket.io",
@@ -93,7 +93,37 @@ export function useMyTeamSocket(teamId: number | null | undefined) {
 
     socketRef.current = socket;
 
-    socket.on("connect", () => setConnected(true));
+    socket.on("connect", () => {
+      setConnected(true);
+      // Fetch initial state in case we joined mid-auction
+      fetch(`${import.meta.env.VITE_API_URL || ""}/api/auctions`)
+        .then(r => r.json())
+        .then(async (auctions) => {
+          const activeAuction = auctions.find((a: any) => a.status === "active" && a.currentSlotId);
+          if (activeAuction) {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auctions/${activeAuction.id}/current-slot`);
+            if (res.ok) {
+              const slot = await res.json();
+              if (slot && slot.status === "active") {
+                setLiveActivity({
+                  auctionId: slot.auctionId,
+                  slotId: slot.id,
+                  playerName: slot.player?.name ?? "Unknown Player",
+                  playerCategory: slot.player?.category ?? "—",
+                  basePrice: slot.basePrice,
+                  currentBid: slot.currentBid ?? slot.basePrice,
+                  bidCount: slot.bidCount ?? 0,
+                  leadingTeamId: slot.highestBidTeamId,
+                  leadingTeamName: slot.highestBidTeam?.name ?? slot.highestBidTeam?.shortName ?? null,
+                  leadingTeamColor: slot.highestBidTeam?.primaryColor ?? null,
+                  isMyTeamLeading: !!teamId && slot.highestBidTeamId === teamId,
+                });
+              }
+            }
+          }
+        })
+        .catch(console.error);
+    });
     socket.on("disconnect", () => setConnected(false));
 
     // ── Player selected: a new lot opens ──────────────────────────────────────
