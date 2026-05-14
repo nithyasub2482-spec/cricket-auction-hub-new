@@ -5,7 +5,7 @@ import {
   useGetTeamSquad, getGetTeamSquadQueryKey,
   useGetTeam, getGetTeamQueryKey,
   useListPlayers, getListPlayersQueryKey,
-  usePlaceBid, useGetAuction,
+  usePlaceBid, useGetAuction, useListAuctions, useGetCurrentSlot, getGetCurrentSlotQueryKey
 } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -99,7 +99,32 @@ export default function MyTeam() {
   const teamId = user?.teamId ?? null;
 
   // Real-time WebSocket updates
-  const { connected, liveActivity } = useMyTeamSocket(teamId);
+  const { connected, liveActivity: socketLiveActivity } = useMyTeamSocket(teamId);
+
+  const { data: auctions } = useListAuctions();
+  const activeAuction = auctions?.find(a => a.status === "active" && a.currentSlotId);
+  const activeAuctionId = socketLiveActivity?.auctionId ?? activeAuction?.id ?? 0;
+
+  const { data: activeSlot } = useGetCurrentSlot(activeAuctionId, {
+    query: {
+      enabled: !!activeAuctionId && !socketLiveActivity,
+      queryKey: getGetCurrentSlotQueryKey(activeAuctionId)
+    }
+  });
+
+  const liveActivity = socketLiveActivity || (activeSlot && activeSlot.status === 'active' ? {
+      auctionId: activeSlot.auctionId,
+      slotId: activeSlot.id,
+      playerName: activeSlot.player?.name ?? "Unknown Player",
+      playerCategory: activeSlot.player?.category ?? "—",
+      basePrice: activeSlot.basePrice,
+      currentBid: activeSlot.currentBid ?? activeSlot.basePrice,
+      bidCount: activeSlot.bidCount ?? 0,
+      leadingTeamId: activeSlot.highestBidTeamId,
+      leadingTeamName: activeSlot.highestBidTeam?.name ?? activeSlot.highestBidTeam?.shortName ?? null,
+      leadingTeamColor: activeSlot.highestBidTeam?.primaryColor ?? null,
+      isMyTeamLeading: !!teamId && activeSlot.highestBidTeamId === teamId,
+  } : null);
 
   const { data: team, isLoading: tLoading } = useGetTeam(teamId ?? 0, {
     query: { enabled: !!teamId, queryKey: getGetTeamQueryKey(teamId ?? 0) },
@@ -119,10 +144,10 @@ export default function MyTeam() {
     }
   );
 
-  const { data: auction } = useGetAuction(liveActivity?.auctionId ?? 0, {
+  const { data: auction } = useGetAuction(activeAuctionId, {
     query: { 
-      enabled: !!liveActivity?.auctionId,
-      queryKey: ["getAuction", liveActivity?.auctionId] 
+      enabled: !!activeAuctionId,
+      queryKey: ["getAuction", activeAuctionId] 
     },
   });
 
