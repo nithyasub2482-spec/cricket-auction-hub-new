@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Layout } from "@/components/layout";
 import { 
@@ -22,22 +22,30 @@ export default function AuctionControl() {
   const { id: auctionIdParam } = useParams();
   const auctionId = parseInt(auctionIdParam || "0", 10);
   const { toast } = useToast();
-  
-  const { timerState, lastEvent } = useAuctionSocket(auctionId);
+
+  const { timerState, lastEvent, connected } = useAuctionSocket(auctionId);
   useBidSounds(lastEvent, timerState);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   
-  const { data: auction, isLoading: auctionLoading } = useGetAuction(auctionId, {
+  const { data: auction, isLoading: auctionLoading, refetch: refetchAuction } = useGetAuction(auctionId, {
     query: { enabled: !!auctionId, queryKey: getGetAuctionQueryKey(auctionId) }
   });
-  
-  const { data: slot } = useGetCurrentSlot(auctionId, {
-    query: { 
-      enabled: !!auctionId && !!auction?.currentSlotId && (auction?.status === "active" || auction?.status === "paused"), 
-      queryKey: [...getGetCurrentSlotQueryKey(auctionId), auction?.currentSlotId] 
+
+  const { data: slot, refetch: refetchSlot } = useGetCurrentSlot(auctionId, {
+    query: {
+      enabled: !!auctionId && !!auction?.currentSlotId && (auction?.status === "active" || auction?.status === "paused"),
+      queryKey: [...getGetCurrentSlotQueryKey(auctionId), auction?.currentSlotId]
     }
   });
+
+  // Refetch slot and auction data when socket reconnects to ensure timer is synced
+  useEffect(() => {
+    if (connected && auctionId) {
+      refetchAuction();
+      refetchSlot();
+    }
+  }, [connected, auctionId, refetchAuction, refetchSlot]);
   
   const { data: allPlayers } = useListPlayers(
     searchTerm ? { search: searchTerm } : {}

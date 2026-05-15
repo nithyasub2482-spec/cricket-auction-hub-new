@@ -32,13 +32,26 @@ export function useAuctionSocket(auctionId?: number) {
 
     socket.on("connect", () => {
       setConnected(true);
-      if (auctionId) joinAuction(socket, auctionId);
+      if (auctionId) {
+        joinAuction(socket, auctionId);
+        // Request current timer state on connect
+        socket.emit("request:timer-state", auctionId);
+      }
     });
 
     socket.on("disconnect", () => setConnected(false));
 
     socket.on("reconnect", () => {
-      if (auctionId) joinAuction(socket, auctionId);
+      if (auctionId) {
+        joinAuction(socket, auctionId);
+        // Request current timer state on reconnect
+        socket.emit("request:timer-state", auctionId);
+      }
+    });
+
+    // ── Request timer state after rejoining ───────────────────────
+    socket.on("timer:state", (payload: TimerState) => {
+      setTimerState(payload);
     });
 
     // ── Timer events ─────────────────────────────────────────────

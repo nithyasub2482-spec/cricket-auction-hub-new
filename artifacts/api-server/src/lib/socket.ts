@@ -38,6 +38,18 @@ export function initSocketServer(httpServer: HttpServer): IOServer {
       socket.leave(`auction:${auctionId}`);
     });
 
+    // ── Handle timer state requests (for reconnections) ──────────────
+    socket.on("request:timer-state", (auctionId: number) => {
+      const state = timers.get(auctionId);
+      if (state) {
+        socket.emit("timer:state", {
+          remaining: state.remaining,
+          total: state.totalSeconds,
+          expired: state.remaining <= 0,
+        });
+      }
+    });
+
     socket.on("disconnect", () => {
       // cleanup handled automatically by socket.io
     });
