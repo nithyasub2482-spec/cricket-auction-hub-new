@@ -134,7 +134,7 @@ export default function Admin() {
                           e.preventDefault();
                           createAuction.mutate(
                             { data: { name: auctionForm.name, leagueName: auctionForm.leagueName, timerSeconds: auctionForm.timerSeconds, bidIncrementMin: auctionForm.bidIncrementMin, biddingMode: auctionForm.biddingMode } },
-                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" }); } }
+                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" }); refetchAuctions(); } }
                           );
                         }}
                         className="space-y-5"

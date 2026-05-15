@@ -77,12 +77,6 @@ export default function Login() {
             </Button>
           </form>
         </div>
-        
-        <div className="mt-8 text-center text-xs text-muted-foreground font-mono space-y-1">
-          <p className="font-bold text-muted-foreground uppercase tracking-wider mb-2">Demo Accounts</p>
-          <p>admin@cricket.com / admin123</p>
-          <p>auctioneer@cricket.com / auction123</p>
-        </div>
       </div>
     </div>
   );
