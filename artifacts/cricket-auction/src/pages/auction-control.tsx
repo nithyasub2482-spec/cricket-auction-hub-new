@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { useAuctionSocket } from "@/hooks/useAuctionSocket";
 import { useBidSounds } from "@/hooks/useBidSounds";
+import { useToast } from "@/hooks/use-toast";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function AuctionControl() {
   const { id: auctionIdParam } = useParams();
   const auctionId = parseInt(auctionIdParam || "0", 10);
+  const { toast } = useToast();
   
   const { timerState, lastEvent } = useAuctionSocket(auctionId);
   useBidSounds(lastEvent, timerState);
@@ -233,26 +235,44 @@ export default function AuctionControl() {
                        )}
 
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <Button 
-                            size="lg" 
+                          <Button
+                            size="lg"
                             className={cn(
                               "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg shadow-2xl transition-all duration-300",
                               timerExpired && hasActiveBid ? "bg-green-500 hover:bg-green-400 scale-[1.02] shadow-green-500/20" : "bg-white text-black hover:bg-white/90"
                             )}
                             disabled={!slot.highestBidTeamId || markSoldMutation.isPending}
-                            onClick={() => markSoldMutation.mutate({ id: slot.id })}
+                            onClick={() => {
+                              markSoldMutation.mutate({ id: slot.id }, {
+                                onSuccess: () => {
+                                  toast({ title: "Player sold successfully", description: `Sold to ${slot.highestBidTeam?.name} for ${formatMoney(Number(slot.currentBid))}` });
+                                },
+                                onError: (error: any) => {
+                                  toast({ title: "Error marking player as sold", description: error?.message || "Unknown error occurred", variant: "destructive" });
+                                }
+                              });
+                            }}
                           >
                             {timerExpired && hasActiveBid ? "Confirm Sale" : "Mark as Sold"}
                           </Button>
-                          <Button 
-                            size="lg" 
+                          <Button
+                            size="lg"
                             variant="outline"
                             className={cn(
                               "h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-lg transition-all duration-300 border-white/10",
                               timerExpired && !hasActiveBid ? "bg-destructive text-white border-none shadow-2xl shadow-destructive/20" : "hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
                             )}
                             disabled={markUnsoldMutation.isPending}
-                            onClick={() => markUnsoldMutation.mutate({ id: slot.id })}
+                            onClick={() => {
+                              markUnsoldMutation.mutate({ id: slot.id }, {
+                                onSuccess: () => {
+                                  toast({ title: "Player marked as unsold" });
+                                },
+                                onError: (error: any) => {
+                                  toast({ title: "Error marking player as unsold", description: error?.message || "Unknown error occurred", variant: "destructive" });
+                                }
+                              });
+                            }}
                           >
                             {timerExpired && !hasActiveBid ? "Confirm Unsold" : "Mark Unsold"}
                           </Button>

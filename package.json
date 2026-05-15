@@ -7,7 +7,7 @@
     "build": "pnpm run typecheck && pnpm -r --filter \"!@workspace/mockup-sandbox\" --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
-    "seed": "export DATABASE_URL=\"postgresql://neondb_owner:npg_QDuUHk3Fsh5z@ep-wild-paper-aotrswl6-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" && tsx ./scripts/src/seed.ts"
+    "seed": "set \"DATABASE_URL=postgresql://neondb_owner:npg_QDuUHk3Fsh5z@ep-wild-paper-aotrswl6-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" && npx tsx ./scripts/src/seed.ts"
   },
   "private": true,
   "devDependencies": {

@@ -40,7 +40,7 @@ export default function Admin() {
   const { data: auctions, refetch: refetchAuctions } = useListAuctions();
   const createAuction = useCreateAuction();
   const deleteAuction = useDeleteAuction();
-  const [auctionForm, setAuctionForm] = useState({ name: "", leagueName: "", timerSeconds: 90, bidIncrementMin: 100000, biddingMode: "auctioneer" as "auctioneer" | "team" });
+  const [auctionForm, setAuctionForm] = useState({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" as "auctioneer" | "team" });
 
   const { data: players } = useListPlayers({});
   const createPlayer = useCreatePlayer();
@@ -134,7 +134,7 @@ export default function Admin() {
                           e.preventDefault();
                           createAuction.mutate(
                             { data: { name: auctionForm.name, leagueName: auctionForm.leagueName, timerSeconds: auctionForm.timerSeconds, bidIncrementMin: auctionForm.bidIncrementMin, biddingMode: auctionForm.biddingMode } },
-                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 90, bidIncrementMin: 100000, biddingMode: "auctioneer" }); } }
+                            { onSuccess: () => { toast({ title: "Auction created" }); setAuctionForm({ name: "", leagueName: "", timerSeconds: 30, bidIncrementMin: 100000, biddingMode: "auctioneer" }); } }
                           );
                         }}
                         className="space-y-5"

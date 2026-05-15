@@ -394,21 +394,29 @@ router.post("/auctions/:id/sold", requireAuth, async (req, res): Promise<void> =
     return;
   }
 
-  const [auction] = await db
-    .select()
-    .from(auctionsTable)
-    .where(eq(auctionsTable.id, params.data.id));
-  if (!auction || !auction.currentSlotId) {
-    res.status(400).json({ error: "No active slot" });
-    return;
-  }
-
+  // Get the slot by ID
   const [slot] = await db
     .select()
     .from(auctionSlotsTable)
-    .where(eq(auctionSlotsTable.id, auction.currentSlotId));
-  if (!slot || !slot.highestBidTeamId || !slot.currentBid) {
-    res.status(400).json({ error: "No bids placed" });
+    .where(eq(auctionSlotsTable.id, params.data.id));
+  if (!slot) {
+    res.status(404).json({ error: "Slot not found" });
+    return;
+  }
+
+  // Get the auction
+  const [auction] = await db
+    .select()
+    .from(auctionsTable)
+    .where(eq(auctionsTable.id, slot.auctionId));
+  if (!auction) {
+    res.status(404).json({ error: "Auction not found" });
+    return;
+  }
+
+  // Validate slot has bids
+  if (!slot.highestBidTeamId || !slot.currentBid) {
+    res.status(400).json({ error: "No bids placed on this slot" });
     return;
   }
 
@@ -450,12 +458,12 @@ router.post("/auctions/:id/sold", requireAuth, async (req, res): Promise<void> =
   await db
     .update(auctionsTable)
     .set({ currentPlayerId: null, currentSlotId: null })
-    .where(eq(auctionsTable.id, params.data.id));
+    .where(eq(auctionsTable.id, slot.auctionId));
 
-  stopTimer(params.data.id);
+  stopTimer(slot.auctionId);
 
   const formattedSlot = await formatSlot(updatedSlot!);
-  emitToAuction(params.data.id, "player:sold", {
+  emitToAuction(slot.auctionId, "player:sold", {
     slot: formattedSlot,
     player: formattedSlot.player,
     team: formattedSlot.soldToTeam,
@@ -472,19 +480,30 @@ router.post("/auctions/:id/unsold", requireAuth, async (req, res): Promise<void>
     return;
   }
 
+  // Get the slot by ID
+  const [slot] = await db
+    .select()
+    .from(auctionSlotsTable)
+    .where(eq(auctionSlotsTable.id, params.data.id));
+  if (!slot) {
+    res.status(404).json({ error: "Slot not found" });
+    return;
+  }
+
+  // Get the auction
   const [auction] = await db
     .select()
     .from(auctionsTable)
-    .where(eq(auctionsTable.id, params.data.id));
-  if (!auction || !auction.currentSlotId) {
-    res.status(400).json({ error: "No active slot" });
+    .where(eq(auctionsTable.id, slot.auctionId));
+  if (!auction) {
+    res.status(404).json({ error: "Auction not found" });
     return;
   }
 
   const [updatedSlot] = await db
     .update(auctionSlotsTable)
     .set({ status: "unsold", updatedAt: new Date() })
-    .where(eq(auctionSlotsTable.id, auction.currentSlotId))
+    .where(eq(auctionSlotsTable.id, params.data.id))
     .returning();
 
   if (updatedSlot) {
@@ -497,12 +516,12 @@ router.post("/auctions/:id/unsold", requireAuth, async (req, res): Promise<void>
   await db
     .update(auctionsTable)
     .set({ currentPlayerId: null, currentSlotId: null })
-    .where(eq(auctionsTable.id, params.data.id));
+    .where(eq(auctionsTable.id, slot.auctionId));
 
-  stopTimer(params.data.id);
+  stopTimer(slot.auctionId);
 
   const formattedSlot = await formatSlot(updatedSlot!);
-  emitToAuction(params.data.id, "player:unsold", {
+  emitToAuction(slot.auctionId, "player:unsold", {
     slot: formattedSlot,
     player: formattedSlot.player,
   });
