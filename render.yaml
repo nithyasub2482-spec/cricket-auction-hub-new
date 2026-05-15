@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: cricket-auction-api
+    env: node
+    plan: free
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm build
+    startCommand: node --enable-source-maps ./artifacts/api-server/dist/index.mjs
+    rootDir: .
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        scope: build
